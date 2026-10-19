@@ -76,8 +76,10 @@
   function wakeVideo() {
     if (!video || videoReady) return;
     try {
+      // play + сразу pause: браузер начинает грузить ролик, но он не играет (иначе Аркадий «оживал» под первым экраном)
       const p = video.play();
-      if (p) p.then(() => { if (!busy) { video.pause(); if (cur >= 0) video.currentTime = timeOf(cur); } }).catch(() => {});
+      if (p) p.catch(() => {});
+      video.pause();
     } catch (e) { /* без видео остаются стоп-кадры */ }
   }
   const hasVideo = () => !!(video && videoReady);
@@ -136,6 +138,14 @@
   // Переход фона за dur секунд. Видео вперёд — обычное воспроизведение (плавнее всего),
   // назад — перемотка по кадрам.
   function travel(fromI, toI, dur) {
+    // первый показ сайта — не переход: ставим кадр сцены, без проигрывания видео
+    if (fromI < 0) {
+      resting = false;
+      styleStage(toI, dur);
+      if (hasVideo()) video.currentTime = timeOf(toI);
+      showLayers(toI, Math.max(dur, .01));
+      return reduce || dur <= 0 ? Promise.resolve() : sleep(Math.min(dur, 1.2) * 1000);
+    }
     resting = false;
     styleStage(toI, dur);
     const part = toI === fromI + 1 && hasVideo() && !reduce && dur > 0 && scenes[toI].dataset.play;
