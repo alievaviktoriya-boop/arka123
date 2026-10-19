@@ -1,0 +1,1484 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>АРКА 123 — помещение в 3D</title>
+<link rel="icon" href="../assets/img/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600&family=Geist:wght@400;500&display=swap">
+<style>
+/* Layout: полноэкранная 3D-сцена; поверх — карточка режима слева внизу, переключатель видов справа, режимы зала по центру снизу */
+:root{
+  --paper:#F1ECE3;
+  --glass:rgba(19,21,31,.78);
+  --night:#13151F;
+  --portal:#7FD3FF;
+  --ink:#E9ECEE;
+  --ink-soft:#AAB9C7;
+  --line:rgba(233,236,238,.12);
+  --accent:#C99A5B;          /* тон дубового паркета */
+  --f-display:"Inter Tight","Segoe UI",system-ui,sans-serif;
+  --f-body:"Geist","Segoe UI",system-ui,sans-serif;
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--night);color:var(--ink);font:400 15px/1.5 var(--f-body);overflow:hidden}
+#scene{position:fixed;inset:0;display:block;width:100%;height:100%;touch-action:none}
+.ui{position:fixed;inset:0;pointer-events:none;padding:calc(16px + env(safe-area-inset-top,0px)) 16px calc(16px + env(safe-area-inset-bottom,0px))}
+.ui>*{pointer-events:auto}
+.brand{position:absolute;top:calc(16px + env(safe-area-inset-top,0px));left:16px;display:flex;align-items:center;gap:10px;background:var(--glass);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);padding:9px 14px 9px 11px;border-radius:6px;box-shadow:0 1px 0 var(--line) inset,0 6px 24px rgba(0,0,0,.28)}
+.brand svg{width:22px;height:25px;flex:none}
+.brand b{font:500 15px/1 var(--f-display);letter-spacing:.01em}
+.brand span{font-size:13px;color:var(--ink-soft)}
+
+.views{position:absolute;top:calc(16px + env(safe-area-inset-top,0px));right:16px;display:flex;flex-direction:column;gap:6px;background:var(--glass);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);padding:6px;border-radius:10px;box-shadow:0 6px 24px rgba(0,0,0,.28)}
+.views button,.modes button,.daytoggle button{font:500 14px/1 var(--f-body);color:var(--ink);background:transparent;border:0;border-radius:6px;padding:10px 13px;cursor:pointer;text-align:left;white-space:nowrap}
+.views button:hover,.modes button:hover,.daytoggle button:hover{background:rgba(233,236,238,.08)}
+.views button[aria-pressed="true"],.modes button[aria-pressed="true"],.daytoggle button[aria-pressed="true"]{background:var(--paper);color:var(--night)}
+button:focus-visible{outline:2px solid var(--portal);outline-offset:2px}
+.views .sep{height:1px;background:var(--line);margin:2px 6px}
+.daytoggle{display:flex;gap:4px}
+.daytoggle button{flex:1;text-align:center;padding:9px 10px}
+
+.card{position:absolute;left:16px;bottom:calc(84px + env(safe-area-inset-bottom,0px));width:min(360px,calc(100vw - 32px));background:var(--glass);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-radius:10px;padding:18px 20px;border:1px solid var(--line);box-shadow:0 10px 36px rgba(0,0,0,.32);display:grid;gap:10px}
+.card .eyebrow{font:600 11px/1 var(--f-display);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft)}
+.card h2{margin:0;font:300 26px/1.15 var(--f-display);letter-spacing:-.01em;text-wrap:balance}
+.card p{margin:0;color:var(--ink-soft);font-size:14.5px}
+.fold{position:absolute;top:10px;right:10px;width:30px;height:30px;border-radius:6px;border:0;background:rgba(233,236,238,.08);color:var(--ink);font:500 18px/1 var(--f-body);cursor:pointer}
+.fold:hover{background:rgba(233,236,238,.16)}
+.card.folded{width:auto;padding:12px 52px 12px 16px}
+.card.folded>*:not(h2):not(.fold){display:none}
+.card.folded h2{font-size:17px}
+.cap{display:flex;align-items:baseline;gap:8px}
+.cap strong{font:300 32px/1 var(--f-display);font-variant-numeric:tabular-nums}
+.cap span{color:var(--ink-soft);font-size:14px}
+.specs{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 0;padding:0;list-style:none}
+.specs li{font-size:12.5px;padding:5px 8px;border-radius:4px;background:rgba(233,236,238,.07)}
+.note{font-size:12px;color:var(--ink-soft);opacity:.85}
+
+.modes{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));display:flex;gap:4px;background:var(--glass);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);padding:6px;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.32);max-width:calc(100vw - 32px);overflow-x:auto;scrollbar-width:none}
+.modes::-webkit-scrollbar{display:none}
+.modes button{text-align:center;padding:12px 16px}
+
+.hint{display:none;position:absolute;right:16px;bottom:calc(24px + env(safe-area-inset-bottom,0px));font-size:12.5px;color:var(--ink);background:var(--glass);padding:7px 11px;border-radius:6px;transition:opacity .6s}
+.loading{position:fixed;inset:0;display:grid;place-items:center;background:var(--night);z-index:5;transition:opacity .8s ease}
+.loading p{font:400 15px/1.4 var(--f-display);color:var(--ink);display:flex;gap:12px;align-items:center}
+.loading i{width:18px;height:18px;border-radius:50%;border:1px solid rgba(233,236,238,.2);border-top-color:var(--portal);animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(1turn)}}
+.loading.done{opacity:0;pointer-events:none}
+
+@media (min-width:1200px){.hint{display:block}}
+@media (max-width:760px){
+  .brand span,.brand b{display:none}
+  .brand{padding:9px 11px}
+  .views{flex-direction:row;flex-wrap:wrap;justify-content:flex-end;left:76px;max-width:none;top:calc(16px + env(safe-area-inset-top,0px))}
+  .views button{padding:8px 10px;font-size:13px}
+  .views .sep{display:none}
+  .card{bottom:calc(76px + env(safe-area-inset-bottom,0px));padding:14px 16px;gap:8px}
+  .card h2{font-size:20px}
+  .card p{font-size:13.5px}
+  .card .note,.card .specs{display:none}
+  .hint{display:none}
+  .modes{left:16px;right:16px;transform:none}
+  .modes button{padding:11px 12px;font-size:13.5px}
+}
+@media (max-width:520px){
+  .card p{display:none}
+  .card{gap:6px}
+}
+@media (prefers-reduced-motion: reduce){.loading i{animation:none}}
+</style>
+
+<canvas id="scene" aria-label="3D-модель помещения АРКА 123"></canvas>
+
+<div class="loading" id="loading"><p><i></i>Собираем помещение…</p></div>
+
+<div class="ui">
+  <div class="brand">
+    <svg viewBox="0 0 22 25" aria-hidden="true"><path d="M1.5 23.5V11A9.5 9.5 0 0 1 20.5 11V23.5Z" fill="none" stroke="#F1ECE3" stroke-width="2.4"/><text x="11" y="19.5" text-anchor="middle" font-family="Inter Tight,sans-serif" font-weight="600" font-size="8" fill="#F1ECE3">123</text></svg>
+    <b>АРКА 123</b><span>Наше помещение</span>
+  </div>
+
+  <nav class="views" aria-label="Ракурс">
+    <button type="button" data-view="overview" aria-pressed="true">Обзор сверху</button>
+    <button type="button" data-view="windows" aria-pressed="false">Вид на окна</button>
+    <button type="button" data-view="hall" aria-pressed="false">От окна в зал</button>
+    <button type="button" data-view="leftwall" aria-pressed="false">Левая стена</button>
+    <button type="button" data-view="entry" aria-pressed="false">От входа</button>
+    <div class="sep"></div>
+    <div class="daytoggle" role="group" aria-label="Освещение">
+      <button type="button" data-light="day" aria-pressed="true">День</button>
+      <button type="button" data-light="evening" aria-pressed="false">Вечер</button>
+    </div>
+  </nav>
+
+  <section class="card" id="card" aria-live="polite">
+    <button type="button" class="fold" id="fold" aria-expanded="true" aria-label="Свернуть описание">–</button>
+    <span class="eyebrow" id="cardEyebrow">Свободная планировка</span>
+    <h2 id="cardTitle">Пустой зал</h2>
+    <div class="cap"><strong id="cardCap">123</strong><span id="cardCapLabel">м² без перегородок</span></div>
+    <p id="cardText">Зал 10 × 12 м: паркет-ёлочка, потолки 4,5 м и два арочных окна с видом на Национальную библиотеку.</p>
+    <ul class="specs"><li>123 м²</li><li>Потолки 4,5 м</li><li>Зал 10 × 12 м</li><li>36 светильников</li></ul>
+    <span class="note">Модель собрана по фотографиям помещения, размеры приблизительные.</span>
+  </section>
+
+  <nav class="modes" aria-label="Расстановка">
+    <button type="button" data-mode="empty" aria-pressed="true">Пустой зал</button>
+    <button type="button" data-mode="lecture" aria-pressed="false">Мастер-класс</button>
+    <button type="button" data-mode="board" aria-pressed="false">Большой стол</button>
+    <button type="button" data-mode="tables" aria-pressed="false">Отдельные столы</button>
+  </nav>
+
+  <div class="hint" id="hint">Вращайте мышью · колесо приближает</div>
+</div>
+
+<script>
+window.__err = function (msg) { var l = document.getElementById('loading'); if (l) { l.classList.remove('done'); l.querySelector('p').textContent = 'Ошибка 3D: ' + msg; } };
+window.addEventListener('error', function (e) { window.__err((e.message || 'не загрузился скрипт') + (e.filename ? ' — ' + e.filename.split('/').slice(-2).join('/') : '')); }, true);
+</script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/environments/RoomEnvironment.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/math/ConvexHull.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/geometries/ConvexGeometry.js"></script>
+<script>
+try {
+const { OrbitControls, RoomEnvironment, ConvexGeometry } = THREE;
+/* ================= базовая сцена ================= */
+const canvas = document.getElementById('scene');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+renderer.setPixelRatio(Math.min(2, Math.max(1.5, devicePixelRatio)));
+renderer.setSize(innerWidth, innerHeight);
+renderer.outputEncoding = THREE.sRGBEncoding;
+renderer.physicallyCorrectLights = true;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 0.85;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+const scene = new THREE.Scene();
+scene.fog = new THREE.Fog(0xdde8f1, 170, 900);
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+
+const camera = new THREE.PerspectiveCamera(45, innerWidth / innerHeight, 0.05, 4000);
+const controls = new OrbitControls(camera, canvas);
+controls.enableDamping = true;
+controls.dampingFactor = 0.07;
+controls.maxPolarAngle = Math.PI * 0.495;
+controls.minDistance = 0.6;
+controls.maxDistance = 38;
+controls.autoRotate = true;
+controls.autoRotateSpeed = 0.35;
+
+/* размеры помещения, метры */
+const L = 12, W = 10, H = 4.5, T = 0.35;   // по словам клиента: 10 × 12 м, стена с окнами — 10 м
+const X0 = -L / 2, X1 = L / 2, Z0 = -W / 2, Z1 = W / 2;
+const SILL = 0.85, WIN_TOP = 3.85;   // оба окна высотой 3 м
+// окна разные (фото 6): левое — 3 м, почти полукруглая арка, 3 створки; правое — 4 м, пологая арка, 4 створки
+const WINS = [
+  { z: 2.97, hw: 1.5, spring: 2.35, mull: [-0.5, 0.5], rad: 1.3, sash: [-1.4, -0.535, 1] },
+  { z: -1.38, hw: 2.0, spring: 2.45, mull: [-1.14, -0.38, 0.38, 1.14], rad: 1.7, sash: [0.415, 1.105, 0] },   // 4 перегородки — 5 частей
+];
+// sash — форточка в нижнем ряду (фото 01, 8): края по u и сторона ручки (0 — у первого края, 1 — у второго)
+// схема заказчика (вид сверху): окна вписаны между выступающими стеновыми панелями
+const PIER_Z = 0.97;            // пилястра между окнами, ширина 0,6 м
+const CORNER_PIER_Z = -3.75;    // пилястра у правого окна, вплотную к панели с часами
+const PANEL_L = 0.5;            // толщина левой стеновой панели (у левого окна); скос с блоками круче и шире
+const PANEL_R = 1.0;            // толщина правой стеновой панели (с часами) и колонны
+const PANEL_END = -1.08;        // где кончается панель с часами и начинается колонна
+const WEDGE_END = 1.88;         // где кончается скос левой панели (скос с блоками ~3 м — втрое шире колонны, по фото)
+const NICHE = [0.02, 2.62];     // сервисная ниша (проём в зал)
+const COL_W = 1.0;              // тёмная колонна у ниши — такая же, как в центре зала; половина скрыта панелью с часами
+const COL_D = 0.6;              // глубина колонны уменьшена (было 1 м); лицо колонны осталось на месте
+const COL_GAP = (CORNER_PIER_Z + 0.25) - COL_D - Z0;   // лицо колонны вровень с гранью светлой пилястры у правого окна; за колонной — угол стола
+const COLUMNS = [[-0.53, PIER_Z]];   // одна графитовая колонна посреди зала // по оси колонны между окнами
+
+/* ================= текстуры ================= */
+function seeded(s) { return () => { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; }; }
+
+function herringboneTexture() {
+  const S = 1024, n = 5, w = S / (2 * n), Lp = n * w;
+  const c = document.createElement('canvas'); c.width = c.height = S;
+  const g = c.getContext('2d');
+  const tones = [];
+  const rnd = seeded(7);
+  for (let i = 0; i < 20; i++) {
+    const l = 45 + rnd() * 10, s = 34 + rnd() * 10, h = 30 + rnd() * 5;   // тон как на фото: медовый дуб, темнее прежнего
+    tones.push({ h, s, l, grain: seeded(100 + i) });
+  }
+  const plank = (x, y, pw, ph, horiz, t) => {
+    if (x > S || y > S || x + pw < 0 || y + ph < 0) return;
+    g.fillStyle = `hsl(${t.h} ${t.s}% ${t.l}%)`;
+    g.fillRect(x, y, pw, ph);
+    const r = seeded(Math.floor(t.h * 1000 + t.l * 10));
+    g.lineWidth = 1;
+    for (let i = 0; i < 9; i++) {
+      g.strokeStyle = `hsla(${t.h - 4} ${t.s + 5}% ${t.l - 14 - r() * 8}% / ${0.12 + r() * 0.18})`;
+      g.beginPath();
+      if (horiz) { const yy = y + 2 + r() * (ph - 4); g.moveTo(x, yy); g.bezierCurveTo(x + pw * .3, yy + (r() - .5) * 4, x + pw * .7, yy + (r() - .5) * 4, x + pw, yy + (r() - .5) * 3); }
+      else { const xx = x + 2 + r() * (pw - 4); g.moveTo(xx, y); g.bezierCurveTo(xx + (r() - .5) * 4, y + ph * .3, xx + (r() - .5) * 4, y + ph * .7, xx + (r() - .5) * 3, y + ph); }
+      g.stroke();
+    }
+    g.strokeStyle = 'rgba(70,45,22,.38)'; g.lineWidth = 1.6;
+    g.strokeRect(x + .8, y + .8, pw - 1.6, ph - 1.6);
+  };
+  for (let cc = -4; cc <= 4; cc++) for (let k = -16; k <= 16; k++) {
+    const ox = k * w + cc * Lp, oy = k * w - cc * Lp;
+    const r = ((cc % 2) + 2) % 2;
+    const kk = (((k - 5 * r) % 10) + 10) % 10;
+    plank(ox, oy, Lp, w, true, tones[kk * 2]);
+    plank(ox, oy + w, w, Lp, false, tones[kk * 2 + 1]);
+  }
+  const tex = new THREE.CanvasTexture(c);
+  tex.encoding = THREE.sRGBEncoding;
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+  return tex;
+}
+
+function plasterTexture() {
+  const S = 512, c = document.createElement('canvas'); c.width = c.height = S;
+  const g = c.getContext('2d'); const r = seeded(3);
+  g.fillStyle = '#e9dcc2'; g.fillRect(0, 0, S, S);   // кремовая штукатурка, как на фото
+  for (let i = 0; i < 1400; i++) {
+    const x = r() * S, y = r() * S, rad = 6 + r() * 38, dark = r() < .5;
+    const grd = g.createRadialGradient(x, y, 0, x, y, rad);
+    grd.addColorStop(0, dark ? 'rgba(170,155,130,.035)' : 'rgba(255,255,250,.04)');
+    grd.addColorStop(1, 'rgba(0,0,0,0)');
+    g.fillStyle = grd;
+    for (const dx of [-S, 0, S]) for (const dy of [-S, 0, S]) { g.save(); g.translate(dx, dy); g.beginPath(); g.arc(x, y, rad, 0, 7); g.fill(); g.restore(); }
+  }
+  const tex = new THREE.CanvasTexture(c);
+  tex.encoding = THREE.sRGBEncoding; tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  return tex;
+}
+
+function panelTexture() {
+  const c = document.createElement('canvas'); c.width = 1024; c.height = 1360;
+  const g = c.getContext('2d');
+  g.fillStyle = '#f3f2ee'; g.fillRect(0, 0, c.width, c.height);
+  g.strokeStyle = '#16181b'; g.lineWidth = 7;
+  const cols = [0, 170, 340, 520, 700, 860, 1024];
+  cols.forEach(x => { g.beginPath(); g.moveTo(x, 0); g.lineTo(x, 1360); g.stroke(); });
+  const r = seeded(11);
+  for (let i = 0; i < cols.length - 1; i++) {
+    const y = 420 + r() * 700; g.beginPath(); g.moveTo(cols[i], y); g.lineTo(cols[i + 1], y); g.stroke();
+  }
+  const tex = new THREE.CanvasTexture(c); tex.encoding = THREE.sRGBEncoding; return tex;
+}
+
+function frostTexture() {
+  // alphaMap читает яркость: тёмное — прозрачно, светлое — матовое стекло
+  const c = document.createElement('canvas'); c.width = 8; c.height = 256;
+  const g = c.getContext('2d');
+  g.fillStyle = 'rgb(34,34,34)'; g.fillRect(0, 0, 8, 256);
+  g.fillStyle = 'rgb(205,205,205)'; g.fillRect(0, 100, 8, 58);
+  g.fillRect(0, 70, 8, 4); g.fillRect(0, 80, 8, 4);
+  return new THREE.CanvasTexture(c);
+}
+
+function slideTexture() {
+  const c = document.createElement('canvas'); c.width = 1280; c.height = 720;
+  const g = c.getContext('2d');
+  const draw = () => {
+    g.fillStyle = '#F1ECE3'; g.fillRect(0, 0, 1280, 720);
+    g.strokeStyle = '#203641'; g.lineWidth = 16;
+    g.beginPath(); g.moveTo(110, 560); g.lineTo(110, 300); g.arc(230, 300, 120, Math.PI, 0); g.lineTo(350, 560); g.closePath(); g.stroke();
+    g.fillStyle = '#203641'; g.font = '300 92px "Inter Tight", sans-serif'; g.textAlign = 'center'; g.fillText('123', 230, 520);
+    g.textAlign = 'left'; g.font = '300 76px "Inter Tight", sans-serif'; g.fillText('Мастер-класс', 430, 300);
+    g.font = '500 40px Geist, sans-serif'; g.fillStyle = '#56666E';
+    g.fillText('Встречаемся напротив библиотеки', 432, 370);
+    g.fillStyle = '#C99A5B'; g.fillRect(432, 430, 120, 8);
+    g.fillStyle = '#203641'; g.font = '500 34px Geist, sans-serif';
+    g.fillText('Начало в 19:00 · зал АРКА 123', 432, 500);
+    tex.needsUpdate = true;
+  };
+  const tex = new THREE.CanvasTexture(c); tex.encoding = THREE.sRGBEncoding;
+  draw(); document.fonts && document.fonts.ready.then(draw);
+  return tex;
+}
+
+function glowTexture() {
+  // мягкое вытянутое пятно: яркая середина по форме лампы, плавное затухание к краям
+  // считается попиксельно (без canvas filter — его нет в Safari): расстояние до отрезка по оси лампы
+  const Wt = 256, Ht = 64, c = document.createElement('canvas'); c.width = Wt; c.height = Ht;
+  const g = c.getContext('2d'), img = g.createImageData(Wt, Ht), x0 = Wt * 0.2, x1 = Wt * 0.8, cy = Ht / 2;
+  for (let y = 0; y < Ht; y++) for (let x = 0; x < Wt; x++) {
+    const dx = Math.max(0, x0 - x, x - x1), d = Math.hypot(dx * 1.2, (y - cy) * 2.2) / Ht;   // 0 на оси, 1 у края
+    const a = Math.max(0, 1 - d) ** 2.4, i = (y * Wt + x) * 4;
+    img.data[i] = img.data[i + 1] = img.data[i + 2] = 255; img.data[i + 3] = Math.round(a * 255);
+  }
+  g.putImageData(img, 0, 0);
+  return new THREE.CanvasTexture(c);
+}
+function oakTexture() {
+  // ламинат «светлый дуб» (фото столов): продольные волокна и редкие сучки
+  const S = 512, c = document.createElement('canvas'); c.width = c.height = S;
+  const g = c.getContext('2d'), r = seeded(17);
+  g.fillStyle = '#d8bd8f'; g.fillRect(0, 0, S, S);
+  for (let i = 0; i < 140; i++) {
+    const y = r() * S, a = 0.05 + r() * 0.12, dark = r() < 0.6;
+    g.strokeStyle = dark ? `rgba(150,110,60,${a})` : `rgba(250,232,200,${a})`; g.lineWidth = 1 + r() * 2.5;
+    g.beginPath(); g.moveTo(0, y);
+    for (let x = 0; x <= S; x += 64) g.lineTo(x, y + Math.sin(x / 90 + i) * 3 + (r() - 0.5) * 2);
+    g.stroke();
+  }
+  for (let i = 0; i < 4; i++) { const x = r() * S, y = r() * S; g.fillStyle = 'rgba(140,100,55,.18)'; g.beginPath(); g.ellipse(x, y, 14, 4, 0, 0, 7); g.fill(); }
+  const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.wrapS = t.wrapT = THREE.RepeatWrapping; return t;
+}
+
+/* текстуры улицы: тайл — 2 × 2 м */
+function canvasTex(c, srgb = true) {
+  const t = new THREE.CanvasTexture(c); if (srgb) t.encoding = THREE.sRGBEncoding;
+  t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = renderer.capabilities.getMaxAnisotropy(); return t;
+}
+function paverTexture() {
+  const make = (base, tones, seed) => {
+    const S = 256, c = document.createElement('canvas'); c.width = c.height = S;
+    const g = c.getContext('2d'), r = seeded(seed);
+    g.fillStyle = base; g.fillRect(0, 0, S, S);
+    const bw = S / 10, bh = S / 20;   // брусчатка 20 × 10 см вперевязку
+    for (let row = 0; row < 20; row++) for (let i = -1; i < 10; i++) {
+      const x = i * bw + (row % 2) * bw / 2;
+      g.fillStyle = tones[Math.floor(r() * tones.length)];
+      g.fillRect(x + 1, row * bh + 1, bw - 2, bh - 2);
+    }
+    return canvasTex(c);
+  };
+  return {
+    red: make('#7d5547', ['#b3755f', '#a86a55', '#bd8069', '#9e6352', '#b87a62'], 5),
+    grey: make('#6f7277', ['#9a9da2', '#8f9297', '#a5a8ad', '#878a8f'], 6),
+  };
+}
+function grassTexture() {
+  const S = 256, c = document.createElement('canvas'); c.width = c.height = S;
+  const g = c.getContext('2d'), r = seeded(9);
+  g.fillStyle = '#7f9d55'; g.fillRect(0, 0, S, S);
+  for (let i = 0; i < 2600; i++) { g.fillStyle = `hsl(${78 + r() * 22} ${30 + r() * 20}% ${32 + r() * 22}%)`; g.fillRect(r() * S, r() * S, 2, 3); }
+  for (let i = 0; i < 40; i++) { g.fillStyle = `hsla(${40 + r() * 10} 70% 55% / .7)`; g.fillRect(r() * S, r() * S, 3, 2); }   // опавшие листья
+  return canvasTex(c);
+}
+// фасады (фото 15, 19, 20): бежевый камень с окнами и арками внизу; синее стекло с поэтажными полосами. Тайл — 4 окна × 4 этажа
+function facadeTexture(kind) {
+  const S = 256, c = document.createElement('canvas'); c.width = c.height = S;
+  const g = c.getContext('2d'), r = seeded(kind === 'glass' ? 12 : 13);
+  if (kind === 'glass') {
+    const gr = g.createLinearGradient(0, 0, S, S); gr.addColorStop(0, '#6f9cc4'); gr.addColorStop(1, '#3f6d96');
+    g.fillStyle = gr; g.fillRect(0, 0, S, S);
+    for (let f = 0; f < 4; f++) {
+      g.fillStyle = 'rgba(230,236,240,.9)'; g.fillRect(0, f * 64, S, 9);   // междуэтажная полоса
+      for (let i = 0; i < 8; i++) { g.fillStyle = `rgba(255,255,255,${0.04 + r() * 0.14})`; g.fillRect(i * 32 + 2, f * 64 + 11, 28, 51); }
+      g.fillStyle = 'rgba(30,45,60,.55)'; for (let i = 0; i <= 8; i++) g.fillRect(i * 32, f * 64, 2, 64);
+    }
+  } else {
+    g.fillStyle = '#e4d9c4'; g.fillRect(0, 0, S, S);
+    for (let f = 0; f < 4; f++) for (let i = 0; i < 4; i++) {
+      const x = i * 64 + 16, y = f * 64 + 14, lit = r();
+      g.fillStyle = lit < 0.15 ? '#8aa0b4' : '#3b4651'; g.fillRect(x, y, 32, 38);
+      g.fillStyle = 'rgba(255,255,255,.18)'; g.fillRect(x, y, 32, 3);
+      g.fillStyle = '#cfc3ac'; g.fillRect(x - 3, y + 38, 38, 4);   // подоконник
+    }
+  }
+  return canvasTex(c);
+}
+function cloudTexture() {
+  // полоса неба по всей окружности: облака гуще к горизонту (низ холста), края зациклены по горизонтали
+  const Wc = 2048, Hc = 512, c = document.createElement('canvas'); c.width = Wc; c.height = Hc;
+  const g = c.getContext('2d'), r = seeded(21);
+  const puff = (x, y, w, h, a, rgb) => {
+    for (const dx of [-Wc, 0, Wc]) {
+      const grd = g.createRadialGradient(x + dx, y, 0, x + dx, y, w);
+      grd.addColorStop(0, `rgba(${rgb},${a})`); grd.addColorStop(0.55, `rgba(${rgb},${a * 0.6})`); grd.addColorStop(1, `rgba(${rgb},0)`);
+      g.save(); g.translate(x + dx, y); g.scale(1, h / w); g.translate(-(x + dx), -y);
+      g.fillStyle = grd; g.beginPath(); g.arc(x + dx, y, w, 0, 7); g.fill(); g.restore();
+    }
+  };
+  // кучевые облака (фото 19–21): скопления клубов, снизу серые, сверху белые; к горизонту мельче и плотнее
+  for (let i = 0; i < 70; i++) {
+    const cy = Hc * (0.3 + Math.pow(r(), 0.7) * 0.62), cx = r() * Wc, k = 1.25 - cy / Hc, size = (50 + r() * 70) * k + 20;
+    for (let j = 0; j < 7; j++) {
+      const x = cx + (r() - 0.5) * size * 2.4, y = cy + (r() - 0.5) * size * 0.35, w = size * (0.45 + r() * 0.5), h = w * (0.45 + r() * 0.2);
+      puff(x, y + h * 0.35, w * 1.05, h, 0.35 + r() * 0.2, '160,170,184');   // тень снизу
+      puff(x, y - h * 0.15, w, h * 0.9, 0.55 + r() * 0.3, '255,255,255');
+    }
+  }
+  const t = canvasTex(c); t.wrapT = THREE.ClampToEdgeWrapping; return t;
+}
+
+/* ================= материалы ================= */
+const M = {
+  floor: new THREE.MeshStandardMaterial({ map: herringboneTexture(), roughness: 0.55, metalness: 0 }),
+  plaster: new THREE.MeshStandardMaterial({ map: plasterTexture(), roughness: 0.95 }),
+  ceiling: new THREE.MeshStandardMaterial({ color: 0x23262a, roughness: 0.95, envMapIntensity: 0.15 }),
+  ceilingParts: new THREE.MeshStandardMaterial({ color: 0x2b2f33, roughness: 0.9, envMapIntensity: 0.15 }),
+  graphite: new THREE.MeshLambertMaterial({ color: 0x2a2f34 }),
+  frame: new THREE.MeshStandardMaterial({ color: 0x1b1e21, roughness: 0.45, metalness: 0.5 }),
+  radiator: new THREE.MeshStandardMaterial({ color: 0x3a3f44, roughness: 0.55, metalness: 0.3 }),
+  glass: new THREE.MeshPhysicalMaterial({ color: 0xd8e8f2, roughness: 0.04, metalness: 0, transparent: true, opacity: 0.1, depthWrite: false }),
+  lamp: new THREE.MeshBasicMaterial({ color: 0xffffff, toneMapped: false }),   // рассеиватель всегда чисто белый, не зависит от освещения
+  glow: new THREE.MeshBasicMaterial({ map: glowTexture(), color: 0xeaf3ff, transparent: true, opacity: 0.22, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, toneMapped: false, fog: false }),
+  lampBody: new THREE.MeshStandardMaterial({ color: 0x15171a, roughness: 0.5, metalness: 0.4 }),
+  black: new THREE.MeshStandardMaterial({ color: 0x1b1e21, roughness: 0.45, metalness: 0.55 }),
+  oak: new THREE.MeshStandardMaterial({ map: oakTexture(), roughness: 0.6 }),   // светлый дуб, как столы на фото
+  fabric: new THREE.MeshStandardMaterial({ color: 0x0a0b0d, roughness: 0.9, envMapIntensity: 0.25 }),   // чёрные сиденья и спинки стульев
+  chrome: new THREE.MeshStandardMaterial({ color: 0xc9cdd1, roughness: 0.25, metalness: 0.9 }),
+  screenOff: new THREE.MeshStandardMaterial({ color: 0x1a2028, roughness: 0.15, metalness: 0.2, emissive: 0x0b1826, emissiveIntensity: 0.6 }),
+  leafV: new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.8, flatShading: true }),
+  white: new THREE.MeshStandardMaterial({ color: 0xf2f0eb, roughness: 0.5 }),
+  panels: new THREE.MeshStandardMaterial({ map: panelTexture(), roughness: 0.6 }),
+  frost: new THREE.MeshPhysicalMaterial({ color: 0xffffff, alphaMap: frostTexture(), transparent: true, roughness: 0.3, depthWrite: false, side: THREE.DoubleSide }),
+  ledStrip: new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xe8f1ff, emissiveIntensity: 1.6 }),
+  pot: new THREE.MeshStandardMaterial({ color: 0xe9e4da, roughness: 0.7 }),
+  leaf: [0x3f6b3a, 0x4d7d42, 0x35602f, 0x5b8a4a].map(c => new THREE.MeshStandardMaterial({ color: c, roughness: 0.8, flatShading: true })),
+  screen: new THREE.MeshStandardMaterial({ map: slideTexture(), emissive: 0xffffff, emissiveMap: null, emissiveIntensity: 0.0, roughness: 0.9 }),
+  bottle: new THREE.MeshPhysicalMaterial({ color: 0xcfe6f2, roughness: 0.05, transparent: true, opacity: 0.45 }),
+  paper: new THREE.MeshStandardMaterial({ color: 0xfbfaf6, roughness: 0.9 }),
+};
+// ореол лампы: середина текстуры (60 % ширины) совпадает с лампой 1,2 м
+const GLOW_GEO = { flat: new THREE.PlaneGeometry(2.0, 0.42).rotateX(-Math.PI / 2), side: new THREE.PlaneGeometry(2.0, 0.34) };
+M.screen.emissiveMap = M.screen.map; M.screen.emissiveIntensity = 0.55;
+M.floor.map.repeat.set(L, W); M.floor.map.center.set(.5, .5); M.floor.map.rotation = Math.PI / 4;
+
+function box(w, h, d, mat, x = 0, y = 0, z = 0, shadow = true) {
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+  m.position.set(x, y, z); m.castShadow = shadow; m.receiveShadow = true; return m;
+}
+function cyl(rt, rb, h, mat, seg = 20) {
+  const m = new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, h, seg), mat);
+  m.castShadow = true; m.receiveShadow = true; return m;
+}
+
+/* ================= исчезающие стены (кукольный домик) ================= */
+const fadeables = [];
+function fadeGroup(normal, point) {
+  const g = new THREE.Group(); scene.add(g);
+  fadeables.push({ g, n: new THREE.Vector3(...normal), p: new THREE.Vector3(...point), o: 1, mats: null });
+  return g;
+}
+function prepareFade(f) {
+  f.mats = [];
+  const prep = m => { m = m.clone(); m.userData.baseOpacity = m.opacity; m.userData.baseTransparent = m.transparent; m.userData.baseDepthWrite = m.depthWrite; f.mats.push(m); return m; };
+  f.g.traverse(o => { if (o.isMesh || o.isLineSegments) o.material = Array.isArray(o.material) ? o.material.map(prep) : prep(o.material); });
+}
+const tmpV = new THREE.Vector3();
+function updateFades() {
+  for (const f of fadeables) {
+    if (!f.mats) prepareFade(f);
+    const outside = tmpV.copy(camera.position).sub(f.p).dot(f.n) > 0.05;
+    const target = outside ? 0 : 1;
+    if (Math.abs(f.o - target) < 0.002) { if (f.o !== target) f.o = target; else continue; }
+    else f.o += (target - f.o) * 0.14;
+    for (const m of f.mats) {
+      const base = m.userData.baseOpacity;
+      m.opacity = base * f.o;
+      const fading = f.o < 0.999;
+      m.transparent = fading || m.userData.baseTransparent;
+      m.depthWrite = fading ? false : m.userData.baseDepthWrite;
+    }
+    f.g.visible = f.o > 0.01 ? true : true; // тени сохраняются, даже когда стена прозрачна
+  }
+}
+
+/* ================= пол ================= */
+const floorSlab = box(L + 2 * T, 0.3, W + 2 * T, M.graphite, 0, -0.15, 0);
+scene.add(floorSlab);
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(L, W), M.floor);
+floor.rotation.x = -Math.PI / 2; floor.position.y = 0.002; floor.receiveShadow = true;
+scene.add(floor);
+// чёрный плинтус — по всем стенам и панелям без разрывов, кроме колонн (пилястр) и стола в нише
+function plinth(x0, z0, x1, z1, nx, nz) {   // отрезок вдоль стены, (nx, nz) — нормаль в зал
+  const len = Math.hypot(x1 - x0, z1 - z0);
+  const m = box(len, 0.08, 0.02, M.frame, (x0 + x1) / 2 + nx * 0.01, 0.04, (z0 + z1) / 2 + nz * 0.01, false);
+  m.rotation.y = -Math.atan2(z1 - z0, x1 - x0); scene.add(m);
+}
+{
+  const zLP = Z1 - PANEL_L, zRP = Z0 + PANEL_R;
+  // стена с окнами: между левой панелью и пилястрой, между пилястрами
+  plinth(X0, zLP, X0, PIER_Z + 0.3, 1, 0);
+  plinth(X0, PIER_Z - 0.3, X0, CORNER_PIER_Z + 0.25, 1, 0);
+  // вокруг светлых пилястр у окон
+  plinth(X0, PIER_Z + 0.3, X0 + 0.3, PIER_Z + 0.3, 0, 1);
+  plinth(X0 + 0.3, PIER_Z + 0.3, X0 + 0.3, PIER_Z - 0.3, 1, 0);
+  plinth(X0, PIER_Z - 0.3, X0 + 0.3, PIER_Z - 0.3, 0, -1);
+  plinth(X0, CORNER_PIER_Z + 0.25, X0 + 0.3, CORNER_PIER_Z + 0.25, 0, 1);
+  plinth(X0 + 0.3, CORNER_PIER_Z + 0.25, X0 + 0.3, CORNER_PIER_Z - 0.25, 1, 0);
+  // левая панель, её скос и дальше обычная стена до стеклянной стены
+  plinth(X0, zLP, PANEL_END, zLP, 0, -1);
+  { const ll = Math.hypot(WEDGE_END - PANEL_END, PANEL_L); plinth(PANEL_END, zLP, WEDGE_END, Z1, PANEL_L / ll, -(WEDGE_END - PANEL_END) / ll); }
+  plinth(WEDGE_END, Z1, X1, Z1, 0, -1);
+  // панель с часами — до угла стола
+  plinth(X0 + 0.3, zRP, PANEL_END, zRP, 0, 1);
+  // белая консоль — от тёмного блока у столика до стеклянной стены
+  plinth(NICHE[1] + 1.25, Z0 + 0.1, X1, Z0 + 0.1, 0, 1);
+  // стеклянная стена выхода
+  scene.add(box(0.02, 0.08, W, M.frame, X1 - 0.01, 0.04, 0, false));
+}
+
+/* ================= стена с арочными окнами ================= */
+function archPath(path, uc, hw, v0, vSpring, vTop, reverse = false) {
+  // полуэллипс: дуга без излома переходит в вертикальные стороны окна
+  const rise = vTop - vSpring;
+  const pts = [[uc - hw, v0], [uc + hw, v0]];
+  const N = 120;
+  for (let i = 0; i <= N; i++) { const a = Math.PI * i / N; pts.push([uc + hw * Math.cos(a), vSpring + rise * Math.sin(a)]); }
+  if (reverse) pts.reverse();
+  path.moveTo(pts[0][0], pts[0][1]);
+  for (let i = 1; i < pts.length; i++) path.lineTo(pts[i][0], pts[i][1]);
+  path.closePath();
+  return { hw, rise };
+}
+const winWall = fadeGroup([-1, 0, 0], [X0, 0, 0]);
+{
+  const shape = new THREE.Shape();
+  const ext = W / 2 + T;
+  shape.moveTo(-ext, 0); shape.lineTo(ext, 0); shape.lineTo(ext, H); shape.lineTo(-ext, H); shape.closePath();
+  for (const wn of WINS) { const hole = new THREE.Path(); archPath(hole, -wn.z, wn.hw, SILL, wn.spring, WIN_TOP, true); shape.holes.push(hole); }
+  const geo = new THREE.ExtrudeGeometry(shape, { depth: T, bevelEnabled: false, curveSegments: 32 });
+  geo.rotateY(Math.PI / 2);
+  // UV для штукатурки: проецируем по z/y
+  const pos = geo.attributes.position, uv = geo.attributes.uv;
+  for (let i = 0; i < pos.count; i++) uv.setXY(i, pos.getZ(i) / 3, pos.getY(i) / 3);
+  const wall = new THREE.Mesh(geo, M.plaster);
+  wall.position.x = X0 - T; wall.castShadow = true; wall.receiveShadow = true;
+  winWall.add(wall);
+
+  for (const wn of WINS) {
+    const z = wn.z, WIN_HW = wn.hw, WIN_SPRING = wn.spring, uc = -z;
+    // рама по контуру
+    const fr = new THREE.Shape(); archPath(fr, uc, WIN_HW, SILL, WIN_SPRING, WIN_TOP);
+    const inner = new THREE.Path(); archPath(inner, uc, WIN_HW - 0.1, SILL + 0.1, WIN_SPRING, WIN_TOP - 0.1, true); fr.holes.push(inner);
+    const fg = new THREE.ExtrudeGeometry(fr, { depth: 0.09, bevelEnabled: false, curveSegments: 32 }); fg.rotateY(Math.PI / 2);
+    const fm = new THREE.Mesh(fg, M.frame); fm.position.x = X0 - T * 0.55; fm.castShadow = true; winWall.add(fm);
+    // стекло
+    const gs = new THREE.Shape(); archPath(gs, uc, WIN_HW - 0.1, SILL + 0.1, WIN_SPRING, WIN_TOP - 0.1);
+    const gg = new THREE.ShapeGeometry(gs, 120); gg.rotateY(Math.PI / 2);
+    const gm = new THREE.Mesh(gg, M.glass); gm.position.x = X0 - T * 0.5; winWall.add(gm);
+    // импосты: две вертикали и горизонталь
+    const hwI = WIN_HW - 0.1, riseI = WIN_TOP - 0.1 - WIN_SPRING;
+    const arcY = u => WIN_SPRING + riseI * Math.sqrt(Math.max(0, 1 - (u / hwI) ** 2));
+    for (const du of wn.mull) {
+      // до арки по ближней к центру грани импоста и чуть в раму — без просвета на крутой части дуги
+      const top = Math.min(WIN_TOP, arcY(Math.max(0, Math.abs(du) - 0.035)) + 0.06), hgt = top - SILL;
+      winWall.add(box(0.09, hgt, 0.07, M.frame, X0 - T * 0.5, SILL + hgt / 2, z - du));
+    }
+    winWall.add(box(0.09, 0.07, WIN_HW * 2 - 0.1, M.frame, X0 - T * 0.5, WIN_SPRING, z));
+    // форточка: своя рама поверх стекла со стороны зала и чёрная ручка
+    {
+      const [s0, s1, side] = wn.sash, sw = s1 - s0, zc = z - (s0 + s1) / 2;
+      const yb = SILL + 0.1, yt = WIN_SPRING - 0.035, sh = yt - yb, fx = X0 - T * 0.5 + 0.06, b = 0.065;
+      winWall.add(box(0.04, b, sw, M.frame, fx, yb + b / 2, zc, false));
+      winWall.add(box(0.04, b, sw, M.frame, fx, yt - b / 2, zc, false));
+      winWall.add(box(0.04, sh, b, M.frame, fx, yb + sh / 2, z - s0 - b / 2, false));
+      winWall.add(box(0.04, sh, b, M.frame, fx, yb + sh / 2, z - s1 + b / 2, false));
+      const hz = z - (side ? s1 - 0.085 : s0 + 0.085), hy = yb + sh * 0.52;
+      winWall.add(box(0.03, 0.1, 0.045, M.black, fx + 0.03, hy, hz, false));
+      const lever = box(0.03, 0.17, 0.03, M.black, 0, 0, 0, false); lever.geometry.translate(0, -0.06, 0);
+      lever.position.set(fx + 0.055, hy + 0.02, hz); winWall.add(lever);
+    }
+    // подоконник и радиатор
+    winWall.add(box(T * 0.55 + 0.12, 0.05, WIN_HW * 2 + 0.1, M.frame, X0 - T * 0.275 + 0.06, SILL - 0.02, z));   // подоконник — тот же материал, что рамы окон
+    const rad = box(0.1, 0.48, wn.rad, M.radiator, X0 + 0.12, 0.42, z); winWall.add(rad);
+    for (let i = 0; i < Math.round(wn.rad / 0.072); i++) winWall.add(box(0.012, 0.44, 0.012, M.frame, X0 + 0.175, 0.42, z - wn.rad / 2 + 0.03 + i * 0.072, false));
+  }
+}
+
+// встроенная колонна (пилястра) между окнами
+for (const [pz, d, w] of [[PIER_Z, 0.3, 0.6], [CORNER_PIER_Z, 0.3, 0.5]]) {   // пилястра между окнами: выступ уменьшен с 55 до 30 см
+  winWall.add(box(d, H, w, M.plaster, X0 + d / 2, H / 2, pz));
+  setBoxUV(winWall.children[winWall.children.length - 1], 'zy');
+}
+
+/* ================= остальные стены ================= */
+const clockWall = fadeGroup([0, 0, 1], [0, 0, Z1]);
+clockWall.add(Object.assign(box(L + 2 * T, H, T, M.plaster, 0, H / 2, Z1 + T / 2), {}));
+setBoxUV(clockWall.children[0], 'xy');
+const plainWall = fadeGroup([0, 0, -1], [0, 0, Z0]);
+plainWall.add(box(L + 2 * T, H, T, M.plaster, 0, H / 2, Z0 - T / 2)); setBoxUV(plainWall.children[0], 'xy');
+{ // часы из отдельных меток, как на фото: на 12, 3, 6 и 9 — цифры, между ними — короткие метки
+  const cx = -3.6, cy = 2.75, zz = Z0 + PANEL_R + 0.012, rr = 0.62;
+  const ink = new THREE.MeshLambertMaterial({ color: 0x141618 });   // матовый чёрный, как на фото
+  const digit = t => {   // чёрная цифра на прозрачном фоне, жирный гротеск
+    const c = document.createElement('canvas'); c.width = 256; c.height = 128;
+    const g = c.getContext('2d'); g.fillStyle = '#1b1e21'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.font = '700 112px "Inter Tight", "Segoe UI", Arial, sans-serif'; g.fillText(t, 128, 68);
+    const tex = new THREE.CanvasTexture(c); tex.encoding = THREE.sRGBEncoding;
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 0.2), new THREE.MeshStandardMaterial({ map: tex, transparent: true, alphaTest: 0.3, roughness: 0.75, envMapIntensity: 0.2 }));
+    if (document.fonts) document.fonts.ready.then(() => { g.clearRect(0, 0, 256, 128); g.fillText(t, 128, 68); tex.needsUpdate = true; });
+    return m;
+  };
+  for (let i = 0; i < 12; i++) {
+    const a = i / 12 * Math.PI * 2, x = cx + Math.sin(a) * rr, y = cy + Math.cos(a) * rr;
+    if (i % 3 === 0) { const d = digit(String(i || 12)); d.position.set(cx + Math.sin(a) * rr * 0.93, cy + Math.cos(a) * rr * 0.93, zz); plainWall.add(d); continue; }
+    const m = box(0.035, 0.11, 0.02, ink, x, y, zz, false);
+    m.rotation.z = -a; plainWall.add(m);
+  }
+  const hh = box(0.035, 0.36, 0.006, ink, 0, 0, 0, false); hh.geometry.translate(0, 0.16, 0); hh.position.set(cx, cy, zz + 0.004); hh.rotation.z = -1.2; plainWall.add(hh);
+  const mh = box(0.025, 0.52, 0.006, ink, 0, 0, 0, false); mh.geometry.translate(0, 0.24, 0); mh.position.set(cx, cy, zz + 0.011); mh.rotation.z = 2.1; plainWall.add(mh);
+}
+
+const backWall = fadeGroup([1, 0, 0], [X1, 0, 0]);
+{
+  // по фото входа: в углу у шкафов — прозрачная дверь и тамбур, затем белая колонна, дальше сплошное матовое стекло
+  const dz0 = Z0 + 0.15, dz1 = Z0 + 1.45, cz0 = Z0 + 2.7, cz1 = Z0 + 3.4;   // дверь у белой консоли, колонны на прежних местах
+  // над матовым стеклом — прозрачное до потолка (фото 18, 29): перегородка стеклянная на всю высоту, сверху тонкий профиль
+  { const top = new THREE.Mesh(new THREE.PlaneGeometry(W, H - 3.0), new THREE.MeshPhysicalMaterial({ color: 0xe8f1f5, roughness: 0.03, transparent: true, opacity: 0.12, depthWrite: false, side: THREE.DoubleSide }));
+    top.rotation.y = -Math.PI / 2; top.position.set(X1 + 0.02, 3.0 + (H - 3.0) / 2, 0); backWall.add(top);
+    backWall.add(box(0.04, 0.04, W, M.frame, X1 + 0.02, 3.0, 0, false));
+    backWall.add(box(0.04, 0.04, W, M.frame, X1 + 0.02, H - 0.02, 0, false)); }
+  // две белые колонны: у тамбура и на таком же расстоянии от противоположной стены; между ними и после — матовое стекло
+  const colA = [cz0, cz1], colB = [Z1 - (cz1 - Z0), Z1 - (cz0 - Z0)];
+  const clamp = new THREE.MeshStandardMaterial({ color: 0xc9cdd1, metalness: 0.9, roughness: 0.25 });
+  const glassRun = (z0, z1, n) => {
+    const len = z1 - z0;
+    const fp = new THREE.Mesh(new THREE.PlaneGeometry(len, 3.0), M.frost);
+    fp.rotation.y = -Math.PI / 2; fp.position.set(X1 + 0.02, 1.5, z0 + len / 2); backWall.add(fp);
+    for (let i = 1; i < n; i++) {
+      const z = z0 + i * len / n;
+      backWall.add(box(0.012, 3.0, 0.012, M.frame, X1 + 0.02, 1.5, z, false));
+      backWall.add(box(0.03, 0.05, 0.05, clamp, X1, 1.45, z, false));
+    }
+    backWall.add(box(0.05, 0.04, len, M.frame, X1 + 0.02, 0.02, z0 + len / 2, false));
+  };
+  glassRun(dz1, cz0, 1);
+  glassRun(colA[1], colB[0], 4);
+  glassRun(colB[1], Z1, 1);
+  for (const [z0, z1] of [colA, colB]) {
+    backWall.add(box(0.6, H, z1 - z0, M.white, X1, H / 2, (z0 + z1) / 2));
+    for (const y of [1.5, 2.95]) backWall.add(box(0.62, 0.014, z1 - z0 + 0.02, M.black, X1, y, (z0 + z1) / 2, false));
+  }
+  backWall.add(box(0.02, 0.06, 0.06, M.white, X1 - 0.31, 1.62, (colA[0] + colA[1]) / 2, false));
+  // снаружи вторая колонна тёмно-синяя (фото входа)
+  backWall.add(box(0.3, 3.2, colB[1] - colB[0] + 0.04, new THREE.MeshLambertMaterial({ color: 0x2b3f63 }), X1 + 0.45, 1.6, (colB[0] + colB[1]) / 2, false));
+  // прозрачная дверь выхода с металлической фурнитурой
+  const clear = new THREE.MeshPhysicalMaterial({ color: 0xe8f1f5, roughness: 0.03, transparent: true, opacity: 0.16, depthWrite: false, side: THREE.DoubleSide });
+  const dw = dz1 - dz0;
+  const door = new THREE.Mesh(new THREE.PlaneGeometry(dw, 2.4), clear); door.rotation.y = -Math.PI / 2; door.position.set(X1 - 0.05, 1.2, dz0 + dw / 2); backWall.add(door);
+  const tr = new THREE.Mesh(new THREE.PlaneGeometry(dw, 0.6), clear); tr.rotation.y = -Math.PI / 2; tr.position.set(X1 - 0.05, 2.7, dz0 + dw / 2); backWall.add(tr);
+  const steel = new THREE.MeshStandardMaterial({ color: 0xbfc4c8, metalness: 0.9, roughness: 0.25 });
+  for (const y of [0.06, 2.36]) backWall.add(box(0.05, 0.06, 0.16, steel, X1 - 0.05, y, dz0 + 0.1, false));
+  backWall.add(box(0.04, 0.04, 0.12, steel, X1 - 0.07, 1.05, dz1 - 0.12, false));
+  // тамбур и вторая, матовая дверь
+  backWall.add(box(1.3, 0.04, dw, new THREE.MeshStandardMaterial({ color: 0x45484c, roughness: 0.4 }), X1 + 0.65, 0.01, dz0 + dw / 2, false));
+  const d2 = new THREE.Mesh(new THREE.PlaneGeometry(dw, 2.4), M.frost); d2.rotation.y = -Math.PI / 2; d2.position.set(X1 + 1.3, 1.2, dz0 + dw / 2); backWall.add(d2);
+  backWall.add(box(1.3, H, 0.1, M.white, X1 + 0.65, H / 2, dz0 - 0.05));
+  // коридор за стеклом: плитка, тёмно-синяя колонна снаружи
+  backWall.add(box(3.2, 0.05, W, new THREE.MeshStandardMaterial({ color: 0xe6e5e2, roughness: 0.3 }), X1 + T + 1.6, -0.02, 0, false));
+  backWall.add(box(0.2, 3.25, W + T, M.plaster, X1 + T + 3.2, 3.25 / 2, 0, false));                 // стена коридора — до подвесного потолка
+  backWall.add(box(0.2, H - 3.25, W + T, M.ceiling, X1 + T + 3.2, (H + 3.25) / 2, 0, false));   // выше — тёмное межпотолочное пространство
+  backWall.add(box(3.4, 0.2, W + T, M.ceiling, X1 + T + 1.6, H + 0.1, 0, false));
+  // в коридоре — белый подвесной потолок ниже, с коробом-фризом у стекла (фото 18, 13)
+  backWall.add(box(3.55, 0.08, W + T, M.white, X1 + 1.8, 3.25, 0, false));
+  backWall.add(box(0.5, 0.3, W + T, M.white, X1 + 0.3, 3.05, 0, false));
+}
+
+function setBoxUV(mesh, mode) {
+  const g = mesh.geometry, p = g.attributes.position, uv = g.attributes.uv;
+  const sx = mesh.position.x, sy = mesh.position.y, sz = mesh.position.z;
+  for (let i = 0; i < p.count; i++) {
+    const x = p.getX(i) + sx, y = p.getY(i) + sy, z = p.getZ(i) + sz;
+    uv.setXY(i, (mode === 'xy' ? x : z) / 3, y / 3);
+  }
+}
+
+/* ================= стеновые панели по схеме заказчика ================= */
+// левая панель: выступает от стены с окнами, затем плавно сходит на нет; дальше обычная стена
+{
+  const xs = PANEL_END, xe = WEDGE_END;
+  const sh = new THREE.Shape();   // контур в плоскости (x, −z)
+  sh.moveTo(X0, -Z1); sh.lineTo(X0, -(Z1 - PANEL_L)); sh.lineTo(xs, -(Z1 - PANEL_L)); sh.lineTo(xe, -Z1); sh.closePath();
+  const geo = new THREE.ExtrudeGeometry(sh, { depth: H, bevelEnabled: false });
+  geo.rotateX(-Math.PI / 2);
+  const p = geo.attributes.position, uv = geo.attributes.uv;
+  for (let i = 0; i < p.count; i++) uv.setXY(i, (p.getX(i) + p.getZ(i)) / 3, p.getY(i) / 3);
+  const m = new THREE.Mesh(geo, M.plaster); m.castShadow = true; m.receiveShadow = true;
+  clockWall.add(m);
+  // скос окрашен тем же материалом, что и центральная колонна
+  const len = Math.hypot(xe - xs, PANEL_L);
+  const face = new THREE.Mesh(new THREE.PlaneGeometry(len, H), M.graphite);
+  const nx = PANEL_L / len, nz = -(xe - xs) / len;
+  face.rotation.y = Math.atan2(nx, nz);
+  face.position.set((xs + xe) / 2 + nx * 0.003, H / 2, Z1 - PANEL_L / 2 + nz * 0.003);
+  face.receiveShadow = true; clockWall.add(face);
+}
+// правая панель с часами — от стены с окнами до колонны
+{
+  const len = PANEL_END - X0;
+  const pnl = box(len, H, PANEL_R, M.plaster, X0 + len / 2, H / 2, Z0 + PANEL_R / 2);
+  plainWall.add(pnl); setBoxUV(pnl, 'xy');
+  // тёмная колонна сразу после панели с часами, у зала (схема заказчика); обшивка до потолка
+  const ccx = PANEL_END, czc = Z0 + COL_GAP + COL_D / 2;
+  const col = box(COL_W, H, COL_D, M.plaster, ccx, H / 2, czc); plainWall.add(col); setBoxUV(col, 'xy');
+  const greyClad = M.graphite;   // тот же цвет, что у центральной колонны
+  const CLAD = H;   // по ТЗ: колонны обшиты графитом до потолка (на фото ремонт не закончен)
+  plainWall.add(box(COL_W + 0.02, CLAD, COL_D + 0.02, greyClad, ccx, CLAD / 2, czc));
+}
+// сервисная ниша: задняя стенка — имитация плитки, полоски в тон; пустой стол; рядом приставной столик
+{
+  const gp = document.createElement('canvas'); gp.width = 512; gp.height = 1024;
+  const gg = gp.getContext('2d'); gg.fillStyle = '#2a2f34'; gg.fillRect(0, 0, 512, 1024);   // в цвет серых колонн
+  // однотонная, без полосок
+  const gTex = new THREE.CanvasTexture(gp); gTex.encoding = THREE.sRGBEncoding; gTex.wrapS = gTex.wrapT = THREE.RepeatWrapping;
+  const xa = PANEL_END, xb = NICHE[1], w = xb - xa, cx = (xa + xb) / 2;
+  gTex.repeat.set(w / 1.0, H / 2.0);
+  const back = new THREE.Mesh(new THREE.PlaneGeometry(w, H), M.graphite);
+  back.position.set(cx, H / 2, Z0 + 0.012); back.receiveShadow = true; plainWall.add(back);   // в тени стен: солнце сюда не попадает
+  // стол по схеме: начинается за колонной (заполняет место между колонной и стеной),
+  // дальше узкой частью идёт вдоль стены до приставного столика. Сверху — небольшое углубление
+  // буквой «Г» с подсветкой: вдоль стены и поворот к колонне, там будут стоять документы
+  const TH = 0.95, SH = 0.72, FR = 0.8;        // высота заднего борта, дно углубления, низкий передний борт — чтобы подсветку было видно из зала
+  const DB = COL_GAP, DW = 0.35;               // глубина части за колонной и части вдоль стены
+  const xc = xa + COL_W / 2;                    // где кончается колонна
+  const G0 = 0.08, G1 = 0.2, GX0 = xa + 0.3, GX1 = GX0 + (G1 - G0);   // углубление
+  const glow = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xe4eefa, emissiveIntensity: 1.3 });
+  const body = (x0, x1, z0, z1, y0, y1) => plainWall.add(box(x1 - x0, y1 - y0, z1 - z0, M.graphite, (x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2));
+  // в углу за колонной серая панель опускается до стола, так что угол стола такой же узкий (DW), как вдоль стены,
+  // и с той же высотой бортов; белое углубление «Г» идёт вдоль стены и поворачивает вдоль панели до колонны
+  const xp = xc - DW;                             // лицо серой панели в углу
+  body(xa, xc, Z0, Z0 + DB, 0, SH);
+  body(xc, xb, Z0, Z0 + DW, 0, SH);
+  body(xa, xp + G0, Z0, Z0 + DB, SH, TH);         // под панелью и задний борт в углу
+  body(xp + G0, xb, Z0, Z0 + G0, SH, TH);         // задний борт вдоль стены
+  body(xp + G1, xb, Z0 + G1, Z0 + DW, SH, FR);    // передний борт вдоль стены
+  body(xp + G1, xc, Z0 + DW, Z0 + DB, SH, FR);    // передний борт в углу — той же высоты
+  // подсвеченное углубление: дно и задние стенки
+  plainWall.add(box(xb - xp - G0, 0.02, G1 - G0, glow, (xp + G0 + xb) / 2, SH + 0.01, Z0 + (G0 + G1) / 2, false));
+  plainWall.add(box(G1 - G0, 0.02, DB - G0, glow, xp + (G0 + G1) / 2, SH + 0.01, Z0 + (G0 + DB) / 2, false));
+  plainWall.add(box(xb - xp - G0, TH - SH, 0.01, glow, (xp + G0 + xb) / 2, (SH + TH) / 2, Z0 + G0 + 0.006, false));
+  plainWall.add(box(0.01, TH - SH, DB - G0, glow, xp + G0 + 0.006, (SH + TH) / 2, Z0 + (G0 + DB) / 2, false));
+  for (let i = 1; i < 5; i++) plainWall.add(box(0.006, SH - 0.06, 0.006, M.black, xc + i * (xb - xc) / 5, SH / 2, Z0 + DW + 0.003, false));
+  // вставка за колонной до её края — без зазора между колонной и нишей; графитовая, как панели ниши
+  // (со стороны ниши видна её боковая грань от стола до потолка — светлая выглядела лишней полосой)
+  { const pw = xc - xa - 0.003; plainWall.add(box(pw, H, DB, M.graphite, xa + pw / 2, H / 2, Z0 + DB / 2)); }
+  // серая панель с линиями в углу: от стола до потолка, вровень с панелью ниши, переходит в колонну
+  { const bw = xp - xa, bh = H - TH;
+    const tt = gTex.clone(); tt.needsUpdate = true; tt.repeat.set(DB / 1.0, bh / 2.0);
+    plainWall.add(box(bw, bh, DB, M.graphite, xa + bw / 2, TH + bh / 2, Z0 + DB / 2, false)); }
+  // приставной столик по схеме: белая тумба у конца стола и тёмно-серый блок
+  // белый столик (фото 11 и фото владельца): 1,3 м от стены в зал, шириной 0,8 м; корпус почти до пола,
+  // внизу у тёмного блока — выемка, у стены её закрывает боковая стенка до пола
+  { const TL = 1.3, TW = 0.8, z0 = Z0 + 0.1, zc = z0 + TL / 2, xc = xb + TW / 2, NOTCH = 0.4;
+    plainWall.add(box(TW, 0.05, TL, M.white, xc, 0.775, zc));                                          // столешница
+    plainWall.add(box(TW - 0.02, 0.2, TL - 0.02, M.white, xc, 0.65, zc));                              // верх корпуса
+    plainWall.add(box(TW - 0.02, 0.51, TL - NOTCH - 0.01, M.white, xc, 0.04 + 0.255, z0 + NOTCH + (TL - NOTCH) / 2));   // низ — в 4 см от пола
+    plainWall.add(box(TW - 0.02, 0.55, 0.04, M.white, xc, 0.275, z0 + 0.02)); }                        // боковая стенка у стены
+  plainWall.add(box(0.45, 1.1, 0.8, M.graphite, xb + 0.8 + 0.225, 0.55, Z0 + 0.1 + 0.4));   // тёмный блок — вплотную к столику, у стены
+}
+// белая консоль-панель с чёрными полосками — от ниши до стеклянной стены, до потолка
+{
+  const [, xb] = NICHE, cw = X1 - xb, cxw = (xb + X1) / 2;
+  plainWall.add(box(cw, H, 0.1, M.white, cxw, H / 2, Z0 + 0.05));
+  const f = new THREE.Mesh(new THREE.PlaneGeometry(cw, H), M.panels); f.position.set(cxw, H / 2, Z0 + 0.101); plainWall.add(f);
+}
+
+/* ================= потолок: балки, светильники ================= */
+const ceiling = fadeGroup([0, 1, 0], [0, H, 0]);
+ceiling.add(box(L + 2 * T, 0.3, W + 2 * T, M.ceiling, 0, H + 0.15, 0));
+ceiling.add(box(L, 0.62, 0.7, M.ceilingParts, 0, H - 0.31, PIER_Z)); // главная балка вдоль зала над колоннами
+const lampGroup = new THREE.Group(); ceiling.add(lampGroup);
+{
+  const wires = [], cords = [];
+  // по схеме заказчика (вид сверху): по 3 светильника в ряду с каждой стороны от балки, 6 рядов,
+  // светильники по диагонали, наклон рядов: \ / \  \ / \  (36 шт.)
+  const LL = 1.2;
+  const ROWS_X = [-4.5, -3.1, -1.45, 0.35, 1.7, 3.3];
+  const ROWS_D = [1, -1, 1, 1, -1, 1];                 // 1 — «\», −1 — «/» на схеме
+  const bL = PIER_Z + 0.35, bR = PIER_Z - 0.35;        // края балки
+  const zL = [0.18, 0.5, 0.82].map(t => bL + (Z1 - PANEL_L - bL) * (1 - t));
+  const zR = [0.17, 0.5, 0.83].map(t => bR - (bR - (Z0 + PANEL_R)) * t);
+  for (let r = 0; r < ROWS_X.length; r++) for (const z of [...zL, ...zR]) {
+    const x = ROWS_X[r], y = 3.8, rot = ROWS_D[r] * Math.PI / 4;
+    const g = new THREE.Group(); g.position.set(x, y, z); g.rotation.y = rot;
+    g.add(box(LL, 0.05, 0.055, M.lampBody, 0, 0.012, 0, false));
+    // светящийся рассеиватель во всю ширину, чуть ниже корпуса — виден и снизу, и сбоку (фото 1, 27)
+    g.add(box(LL - 0.02, 0.02, 0.05, M.lamp, 0, -0.02, 0, false));
+    // ореол вокруг лампы — имитация свечения: снизу и сбоку
+    const hz = new THREE.Mesh(GLOW_GEO.flat, M.glow); hz.position.y = -0.032; g.add(hz);
+    const hv = new THREE.Mesh(GLOW_GEO.side, M.glow); hv.position.y = -0.02; g.add(hv);
+    lampGroup.add(g);
+    const dx = Math.cos(rot) * 0.45, dz = -Math.sin(rot) * 0.45;
+    for (const sg of [1, -1]) {
+      const wx = x + sg * dx, wz = z + sg * dz;
+      const top = Math.abs(wz - PIER_Z) < 0.35 ? H - 0.62 : H;
+      wires.push(wx, y, wz, wx, top, wz);
+    }
+    cords.push([x + dx * 1.3, y, z + dz * 1.3, Math.abs(z + dz * 1.3 - PIER_Z) < 0.35 ? H - 0.62 : H]);
+  }
+  const wg = new THREE.BufferGeometry(); wg.setAttribute('position', new THREE.Float32BufferAttribute(wires, 3));
+  ceiling.add(new THREE.LineSegments(wg, new THREE.LineBasicMaterial({ color: 0x1a1a1a, transparent: true, opacity: 0.6 })));
+
+  /* провода (фото 3, 4, 10): от каждого светильника свисает чёрный провод питания к потолку,
+     по потолку провода идут линиями с провисами между креплениями */
+  const cable = new THREE.MeshLambertMaterial({ color: 0x141618 });
+  const tube = (pts, r = 0.007) => {
+    const m = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts.map(a => new THREE.Vector3(...a))), Math.max(8, pts.length * 6), r, 5, false), cable);
+    ceiling.add(m); return m;
+  };
+  // линии проводов вдоль зала — ровно по потолку, с креплениями
+  const RUNS = [-3.6, -1.6, 2.6, 4.2], CY = H - 0.012;
+  for (const rz of RUNS) {
+    tube([[-5.6, CY, rz], [5.6, CY, rz]], 0.008);
+    for (let x = -5.4; x <= 5.4; x += 0.6) ceiling.add(box(0.02, 0.012, 0.03, cable, x, H - 0.006, rz, false));
+  }
+  for (const [x, y, z, top] of cords) {
+    // провод питания: ровно вверх от светильника, у потолка — по потолку к ближайшей линии
+    const ty = top === H ? CY : top - 0.01;
+    tube([[x, y + 0.03, z], [x, ty, z]]);
+    let rz = RUNS[0]; for (const r of RUNS) if (Math.abs(r - z) < Math.abs(rz - z)) rz = r;
+    if (top === H && Math.abs(rz - z) < 1.2) {
+      tube([[x, CY, z], [x, CY, rz]]);
+      ceiling.add(box(0.03, 0.012, 0.02, cable, x, H - 0.006, (z + rz) / 2, false));
+    }
+  }
+
+  /* трубы (фото 1, 3, 4): серые круглые трубы под потолком в цвет потолка */
+  const pipeMat = new THREE.MeshLambertMaterial({ color: 0x4a4f54 });
+  const pipe = (a, b, r) => {
+    const A = new THREE.Vector3(...a), B = new THREE.Vector3(...b), len = A.distanceTo(B);
+    const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, len, 16), pipeMat);
+    m.position.copy(A).add(B).multiplyScalar(0.5);
+    m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), B.clone().sub(A).normalize());
+    ceiling.add(m);
+    for (const t of [0.15, 0.5, 0.85]) { const c = new THREE.Mesh(new THREE.CylinderGeometry(r * 1.25, r * 1.25, 0.05, 16), pipeMat); c.position.copy(A).lerp(B, t); c.quaternion.copy(m.quaternion); ceiling.add(c); }
+  };
+  const PY = H - 0.2;
+  const hang = (a, b) => {   // хомуты-подвесы к потолку
+    const A = new THREE.Vector3(...a), B = new THREE.Vector3(...b), n = Math.max(2, Math.round(A.distanceTo(B) / 1.2));
+    for (let i = 0; i <= n; i++) { const P = A.clone().lerp(B, i / n); ceiling.add(box(0.025, H - P.y, 0.025, pipeMat, P.x, (H + P.y) / 2, P.z, false)); }
+  };
+  const run = (a, b, r) => { pipe(a, b, r); hang(a, b); };
+  // толстая труба вдоль главной балки
+  run([X0 + 0.3, PY, PIER_Z - 0.6], [X1 - 0.3, PY, PIER_Z - 0.6], 0.1);
+  // труба поперёк зала у стены с окнами (фото 4): ровно, на одной высоте, прерывается балкой
+  run([-4.4, PY, Z0 + PANEL_R + 0.2], [-4.4, PY, PIER_Z - 0.7], 0.09);
+  run([-4.4, PY, PIER_Z + 0.35], [-4.4, PY, Z1 - PANEL_L - 0.2], 0.09);
+  // тонкие трубы наискосок — горизонтально, ближе к потолку
+  run([-4.4, H - 0.12, 3.2], [1.2, H - 0.12, 4.4], 0.045);
+  run([-2.0, H - 0.12, PIER_Z - 0.6], [2.6, H - 0.12, -3.9], 0.045);
+}
+
+/* ================= колонны, ресепшн, растения ================= */
+for (const [x, z] of COLUMNS) scene.add(box(1.0, H, 1.0, M.graphite, x, H / 2, z));
+// ресепшн-стойки на фото пустого зала нет
+/* растения в белых горшках (фото 13, 43–46, 54–57): «драцена» — длинные листья пучком, «фикус» — ствол и кроны из мелких листьев.
+   Листья слиты в одну геометрию с цветом в вершинах — одно растение рисуется двумя мешами */
+const LEAF_COLS = [0x3f6b3a, 0x4d7d42, 0x35602f, 0x5b8a4a].map(c => new THREE.Color(c));
+function plantGeo(seed, kind) {
+  const r = seeded(seed), parts = [], A = new THREE.Matrix4(), B = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler();
+  const add = (geo, m, col) => {
+    const g = geo.toNonIndexed(); g.applyMatrix4(m);
+    const c = new Float32Array(g.attributes.position.count * 3);
+    for (let i = 0; i < c.length; i += 3) { c[i] = col.r; c[i + 1] = col.g; c[i + 2] = col.b; }
+    g.setAttribute('color', new THREE.BufferAttribute(c, 3)); parts.push(g);
+  };
+  const leafGeo = new THREE.SphereGeometry(0.1, 8, 6);
+  if (kind === 'ficus') {
+    const bark = new THREE.Color(0x5a4532);
+    add(new THREE.CylinderGeometry(0.018, 0.026, 1.2, 6), A.makeTranslation(0, 1.0, 0), bark);
+    for (let k = 0; k < 6; k++) {
+      const a = r() * 6.28, h = 0.8 + k * 0.17 + r() * 0.08, d = 0.12 + r() * 0.16;
+      for (let i = 0; i < 16; i++) {
+        const la = r() * 6.28, lr = 0.06 + r() * 0.16;
+        A.compose(new THREE.Vector3(Math.cos(a) * d + Math.cos(la) * lr, h + (r() - 0.4) * 0.16, Math.sin(a) * d + Math.sin(la) * lr),
+          q.setFromEuler(e.set(r() * 3, r() * 6.28, r() * 3)), new THREE.Vector3(0.55, 0.85, 0.16));
+        add(leafGeo, A, LEAF_COLS[Math.floor(r() * 4)]);
+      }
+    }
+  } else {
+    for (let i = 0; i < 22; i++) {
+      const a = r() * Math.PI * 2, tilt = 0.25 + r() * 0.75, len = 0.9 + r() * 0.8;
+      A.compose(new THREE.Vector3(0, 0.42 + r() * 0.5, 0), q.setFromEuler(e.set(0, a, tilt)), new THREE.Vector3(1, 1, 1));
+      B.compose(new THREE.Vector3(0, len * 0.2, 0), q.identity(), new THREE.Vector3(0.7, len * 2.2, 0.28));
+      add(leafGeo, A.multiply(B), LEAF_COLS[i % 4]);
+    }
+  }
+  return mergeGeos(parts);
+}
+const PLANT_GEO = {};
+function plant(x, z, s = 1, seed = 1, kind = 'blade') {
+  const g = new THREE.Group(); g.position.set(x, 0, z); g.scale.setScalar(s);
+  const p = cyl(0.2, 0.16, 0.42, M.pot); p.position.y = 0.21; g.add(p);
+  const key = kind + seed % 5;
+  const leaves = new THREE.Mesh(PLANT_GEO[key] || (PLANT_GEO[key] = plantGeo(seed % 5 + 1, kind)), M.leafV);
+  leaves.castShadow = true; g.add(leaves);
+  scene.add(g); return g;
+}
+// напольные растения в горшках — у окон и пилястр, как на фото; в пустом зале их нет (на фото пустого зала их нет)
+function floorPlants(g, items, spots) {
+  spots.forEach(([x, z, kind], i) => { const p = plant(x, z, 1.15, 7 + i, kind); scene.remove(p); g.add(p); items.push(p); });
+}
+const PLANTS_WIN = [[-5.4, 4.15, 'ficus'], [-5.4, 1.65, 'blade'], [-5.4, 0.3, 'ficus'], [-5.4, -3.5, 'blade']];
+
+/* ================= мебель и режимы ================= */
+// детали собираются один раз в общие геометрии: стул — 2 меша (чёрное и хром), монитор — 2 меша
+const part = (geo, x, y, z, rx = 0, ry = 0) => { geo.rotateX(rx); geo.rotateY(ry); geo.translate(x, y, z); return geo.toNonIndexed(); };
+const boxG = (w, h, d) => new THREE.BoxGeometry(w, h, d), tubeG = (len, r = 0.012) => new THREE.CylinderGeometry(r, r, len, 8);
+// стул как на фото (45, 49): чёрные сиденье и спинка, хромированный каркас-полозья; смотрит в +z
+const CHAIR_GEO = {
+  soft: mergeGeos([part(boxG(0.47, 0.07, 0.46), 0, 0.47, 0.02), part(boxG(0.45, 0.46, 0.05), 0, 0.8, -0.23, -0.12)]),
+  metal: mergeGeos([-0.22, 0.22].flatMap(x => [
+    part(tubeG(0.44), x, 0.22, 0.19),                 // передняя стойка
+    part(tubeG(0.44), x, 0.012, -0.015, Math.PI / 2), // полоз по полу
+    part(tubeG(0.98), x, 0.49, -0.24, -0.12),         // задняя стойка — держит спинку
+    part(tubeG(0.42), x, 0.44, -0.015, Math.PI / 2),  // под сиденьем
+  ])),
+};
+function chair() {
+  const g = new THREE.Group();
+  const s = new THREE.Mesh(CHAIR_GEO.soft, M.fabric), m = new THREE.Mesh(CHAIR_GEO.metal, M.chrome);
+  s.castShadow = m.castShadow = true; g.add(s, m);
+  return g;
+}
+// монитор на ножке (фото 27, 58): экран смотрит в +z
+const MON_GEO = {
+  body: mergeGeos([part(boxG(0.56, 0.34, 0.03), 0, 0.36, 0), part(boxG(0.04, 0.2, 0.03), 0, 0.12, -0.03), part(boxG(0.24, 0.012, 0.17), 0, 0.006, -0.02)]),
+  screen: new THREE.PlaneGeometry(0.53, 0.31).translate(0, 0.36, 0.0155),
+};
+function monitor(x, y, z, tx, tz) {
+  const g = new THREE.Group(); g.position.set(x, y, z);
+  g.add(new THREE.Mesh(MON_GEO.body, M.black), new THREE.Mesh(MON_GEO.screen, M.screenOff));
+  face(g, tx, tz); return g;
+}
+// стол как на фото: столешница светлого дуба на боковинах-панелях, царга посередине
+function desk(L, Wd, legsAt) {
+  const t = new THREE.Group();
+  t.add(box(L, 0.04, Wd, M.oak, 0, 0.75, 0));
+  for (const dx of legsAt) t.add(box(0.04, 0.73, Wd - 0.1, M.oak, dx, 0.365, 0));
+  t.add(box(L - 0.12, 0.36, 0.02, M.oak, 0, 0.52, 0));
+  return t;
+}
+function face(obj, tx, tz) { obj.rotation.y = Math.atan2(tx - obj.position.x, tz - obj.position.z); }
+const nearColumn = (x, z, d) => COLUMNS.some(([cx, cz]) => Math.hypot(cx - x, cz - z) < d);
+
+const modes = {};
+function makeMode(name, build) { const g = new THREE.Group(); g.visible = false; scene.add(g); const items = []; build(g, items); modes[name] = { g, items, count: g.userData.count || 0 }; }
+
+makeMode('empty', (g) => { g.userData.count = 0; });
+
+makeMode('lecture', (g, items) => {
+  const SX = 3.95;  // экран на обычной части стены, после скоса
+  const scr = new THREE.Group();
+  scr.add(box(4.3, 0.12, 0.14, M.black, 0, 1.31, 0.05));
+  const s = new THREE.Mesh(new THREE.PlaneGeometry(4.2, 2.36), M.screen); s.position.z = 0.02; scr.add(s);
+  scr.position.set(SX, 2.35, Z1 - 0.03); scr.rotation.y = Math.PI; scr.scale.set(0.9, 0.9, 1); g.add(scr); items.push(scr);
+  // проектор под потолком и луч
+  const pj = new THREE.Group(); pj.position.set(SX, 3.7, Z1 - 4.2);
+  pj.add(box(0.36, 0.13, 0.32, M.white, 0, 0, 0));
+  const rod = cyl(0.015, 0.015, H - 3.7, M.black, 8); rod.position.y = (H - 3.7) / 2; pj.add(rod);
+  g.add(pj); items.push(pj);
+  const lens = new THREE.Vector3(SX, 3.68, Z1 - 4.04), sc = [[-1.89, 1.06], [1.89, 1.06], [1.89, -1.06], [-1.89, -1.06]].map(([u, v]) => new THREE.Vector3(SX + u, 2.35 + v, Z1 - 0.06));
+  const bg = new THREE.BufferGeometry(); const vv = [];
+  for (let i = 0; i < 4; i++) { const a = sc[i], b = sc[(i + 1) % 4]; vv.push(lens.x, lens.y, lens.z, a.x, a.y, a.z, b.x, b.y, b.z); }
+  bg.setAttribute('position', new THREE.Float32BufferAttribute(vv, 3));
+  const beam = new THREE.Mesh(bg, new THREE.MeshBasicMaterial({ color: 0xfff6e0, transparent: true, opacity: 0.045, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending }));
+  g.add(beam); items.push(beam);
+  // кафедра
+  const lec = new THREE.Group(); lec.position.set(1.3, 0, Z1 - 1.3);
+  lec.add(box(0.62, 1.05, 0.46, M.graphite, 0, 0.525, 0));
+  const top = box(0.7, 0.04, 0.52, M.oak, 0, 1.1, 0); top.rotation.x = -0.2; lec.add(top);
+  const lap = box(0.34, 0.015, 0.24, M.black, 0, 1.13, 0.02); lap.rotation.x = -0.2; lec.add(lap);
+  face(lec, SX, -3); g.add(lec); items.push(lec);
+  // ряды стульев с проходом
+  let n = 0;
+  for (let row = 0; row < 6; row++) {
+    const z = Z1 - 2.7 - row * 1.0;
+    for (let x = -5.2; x <= 4.9; x += 0.66) {
+      if (Math.abs(x - SX) < 0.5) continue;
+      if (nearColumn(x, z, 0.95)) continue;
+      if (x > 2.3 && x < 3.4 && z < -3.6) continue;   // приставной столик
+      if (x > PANEL_END - 0.8 && x < PANEL_END + 0.8 && z < Z0 + COL_GAP + COL_D + 0.4) continue;   // колонна у ниши
+      const c = chair(); c.position.set(x, 0, z); g.add(c); items.push(c); n++;
+    }
+  }
+  floorPlants(g, items, [PLANTS_WIN[0], PLANTS_WIN[3]]);   // по углам у окон — в рядах не мешают
+  g.userData.count = n;
+});
+
+makeMode('board', (g, items) => {
+  const cx = -0.6, cz = -1.6, TL = 7.4, TW = 1.6;
+  // общий стол из столов как на фото: светлый дуб, боковины-панели
+  const t = desk(TL, TW, [-TL / 2 + 0.3, -1.2, 1.2, TL / 2 - 0.3]); t.position.set(cx, 0, cz);
+  g.add(t); items.push(t);
+  floorPlants(g, items, PLANTS_WIN);
+  for (const dx of [-2.4, 2.4]) { const v = plant(cx + dx, cz, 0.24, dx < 0 ? 31 : 35, "ficus"); scene.remove(v); v.position.y = 0.77; g.add(v); items.push(v); }
+  let n = 0; const per = 10, step = (TL - 0.8) / (per - 1);
+  for (const side of [-1, 1]) for (let i = 0; i < per; i++) {
+    const x = cx - TL / 2 + 0.4 + i * step, z = cz + side * (TW / 2 + 0.36);
+    const c = chair(); c.position.set(x, 0, z); face(c, x, cz); g.add(c); items.push(c); n++;
+    const b = cyl(0.033, 0.033, 0.22, M.bottle, 12); b.position.set(x + 0.18, 0.88, cz + side * (TW / 2 - 0.22)); g.add(b); items.push(b);
+    const pp = box(0.21, 0.01, 0.29, M.paper, x - 0.05, 0.775, cz + side * (TW / 2 - 0.28), false); g.add(pp); items.push(pp);
+  }
+  for (const side of [-1, 1]) { const x = cx + side * (TL / 2 + 0.38); const c = chair(); c.position.set(x, 0, cz); face(c, cx, cz); g.add(c); items.push(c); n++; }
+  const vase = plant(cx, cz, 0.24, 31); scene.remove(vase); vase.position.y = 0.77; g.add(vase); items.push(vase);
+  g.userData.count = n;
+});
+
+function flipchart(x, z, tx, tz) {
+  const f = new THREE.Group(); f.position.set(x, 0, z);
+  for (const dx of [-0.32, 0.32]) { const l = cyl(0.015, 0.015, 1.9, M.black, 8); l.position.set(dx, 0.95, 0); l.rotation.x = 0.12; f.add(l); }
+  const back = cyl(0.015, 0.015, 1.8, M.black, 8); back.position.set(0, 0.9, -0.22); back.rotation.x = -0.25; f.add(back);
+  f.add(box(0.72, 0.95, 0.02, M.paper, 0, 1.45, 0.08));
+  face(f, tx, tz); return f;
+}
+makeMode('tables', (g, items) => {
+  // шесть столов 1,8 × 1,2 м (как столы на фото, сдвинутые парой): по два места с длинных сторон и по одному с торцов,
+  // на каждом столе два монитора — по одному на каждую сторону стола
+  const spots = [[-4.3, -2.5], [-1.2, -1.6], [2.2, -2.1], [-4.3, 3.2], [-1.0, 3.25], [2.4, 3.3]];
+  let n = 0;
+  for (const [x, z] of spots) {
+    const t = desk(1.8, 1.2, [-0.86, 0.86]); t.position.set(x, 0, z);
+    g.add(t); items.push(t);
+    const seats = [[-0.45, 0.98], [0.45, 0.98], [-0.45, -0.98], [0.45, -0.98], [1.3, 0], [-1.3, 0]];
+    for (const [dx, dz] of seats) {
+      const c = chair(); c.position.set(x + dx, 0, z + dz); face(c, x + dx * (dz ? 1 : 0), z); g.add(c); items.push(c); n++;
+    }
+    for (const sd of [1, -1]) { const mon = monitor(x, 0.77, z + sd * 0.32, x, z + sd * 0.98); g.add(mon); items.push(mon); }   // по монитору с каждой длинной стороны
+    const v = plant(x + 0.6, z, 0.2, 40 + n, n % 12 ? 'blade' : 'ficus'); scene.remove(v); v.position.y = 0.77; g.add(v); items.push(v);
+  }
+  floorPlants(g, items, PLANTS_WIN);
+  const fc = flipchart(1.2, -0.5, 1.2, -2.6); g.add(fc); items.push(fc);
+  g.userData.count = n;
+});
+for (const k in modes) modes[k].count = modes[k].g.userData.count;
+
+/* анимация смены расстановки */
+const anims = [];
+let currentMode = null;
+function setMode(name) {
+  if (name === currentMode) return;
+  const now = performance.now();
+  if (currentMode) {
+    const old = modes[currentMode];
+    old.items.forEach((it, i) => anims.push({ it, t0: now + i * 4, d: 420, from: 1, to: 0, after: () => { } }));
+    setTimeout(() => { if (currentMode !== old.name) old.g.visible = false; }, 420 + old.items.length * 4 + 30);
+  }
+  const m = modes[name]; m.name = name;
+  m.g.visible = true;
+  m.items.forEach((it, i) => { it.userData.k = 0; applyK(it, 0); anims.push({ it, t0: now + 260 + i * 9, d: 650, from: 0, to: 1 }); });
+  currentMode = name;
+}
+function applyK(it, k) {
+  if (it.userData.baseY === undefined) { it.userData.baseY = it.position.y; it.userData.baseS = it.scale.x; }
+  const e = k;
+  it.scale.setScalar(Math.max(0.0001, it.userData.baseS * (0.6 + 0.4 * e)));
+  it.position.y = it.userData.baseY + (1 - e) * 0.35;
+  it.traverse(o => { if (o.material && !Array.isArray(o.material)) { if (o.userData.op === undefined) { o.material = o.material.clone(); o.userData.op = o.material.opacity; o.userData.tr = o.material.transparent; } o.material.opacity = o.userData.op * e; o.material.transparent = e < 0.999 || o.userData.tr; } });
+  it.visible = e > 0.001;
+}
+const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+function stepAnims(now) {
+  for (let i = anims.length - 1; i >= 0; i--) {
+    const a = anims[i]; const t = (now - a.t0) / a.d;
+    if (t < 0) continue;
+    const k = a.from + (a.to - a.from) * ease(Math.min(1, t));
+    applyK(a.it, k);
+    if (t >= 1) anims.splice(i, 1);
+  }
+}
+
+/* деревья: геометрия одной кроны (комки с мягкими нормалями) и ствола с ветвями */
+function mergeGeos(list) {
+  let n = 0; for (const g of list) n += g.attributes.position.count;
+  const out = {}; for (const k of ['position', 'normal', 'color']) out[k] = new Float32Array(n * 3);
+  let o = 0;
+  for (const g of list) { for (const k in out) if (g.attributes[k]) out[k].set(g.attributes[k].array, o * 3); o += g.attributes.position.count; }
+  const geo = new THREE.BufferGeometry();
+  for (const k in out) geo.setAttribute(k, new THREE.BufferAttribute(out[k], 3));
+  return geo;
+}
+const TREE_FORMS = [   // высота ствола до кроны, радиус и высота кроны, число комков
+  { stem: 2.2, rx: 1.9, ry: 2.0, n: 26 },
+  { stem: 1.6, rx: 1.1, ry: 3.3, n: 24 },
+  { stem: 2.6, rx: 2.6, ry: 1.6, n: 28 },
+];
+function treeTrunkGeo(k) {
+  const f = TREE_FORMS[k], parts = [];
+  const add = (g, x, y, z, rz, ry) => { g.rotateZ(rz); g.rotateY(ry); g.translate(x, y, z); parts.push(g.toNonIndexed()); };
+  add(new THREE.CylinderGeometry(0.11, 0.2, f.stem + f.ry * 0.9, 7).translate(0, (f.stem + f.ry * 0.9) / 2, 0), 0, 0, 0, 0, 0);
+  for (let i = 0; i < 4; i++) {   // ветви уходят в крону
+    const len = f.rx * 0.9, y = f.stem + f.ry * (0.15 + i * 0.18);
+    add(new THREE.CylinderGeometry(0.035, 0.07, len, 5).translate(0, len / 2, 0), 0, y, 0, 0.75 + i * 0.12, i * 2.2);
+  }
+  const g = mergeGeos(parts); g.computeVertexNormals(); return g;
+}
+function treeCrownGeo(k, seed) {
+  const f = TREE_FORMS[k], r = seeded(seed), parts = [], cy = f.stem + f.ry;
+  for (let i = 0; i < f.n; i++) {
+    // комки разбросаны по эллипсоиду кроны, ближе к краю — мельче
+    const a = r() * Math.PI * 2, u = r() * 2 - 1, rr = Math.cbrt(0.25 + r() * 0.75);
+    const px = Math.cos(a) * Math.sqrt(1 - u * u) * rr * f.rx * 0.78, py = u * rr * f.ry * 0.72, pz = Math.sin(a) * Math.sqrt(1 - u * u) * rr * f.rx * 0.78;
+    const rad = (0.34 + r() * 0.24) * Math.min(f.rx, f.ry * 0.8) * (1.15 - rr * 0.4);
+    const g = new THREE.IcosahedronGeometry(1, 1), p = g.attributes.position;
+    const ph = r() * 10;
+    for (let v = 0; v < p.count; v++) {   // неровная поверхность: шум зависит только от направления, швы не расходятся
+      const x = p.getX(v), y = p.getY(v), z = p.getZ(v);
+      const d = 1 + 0.22 * Math.sin(x * 5.1 + ph) * Math.sin(y * 4.3 + ph * 1.7) + 0.12 * Math.sin(z * 7.7 + ph * 0.6);
+      p.setXYZ(v, px + x * rad * d, cy + py + y * rad * d * 0.85, pz + z * rad * d);
+    }
+    // нормали от центра комка, с уклоном вверх — мягкий свет, как у листвы, без граней-кристаллов
+    const nr = g.attributes.normal, nv = new THREE.Vector3();
+    for (let v = 0; v < p.count; v++) { nv.set(p.getX(v) - px, (p.getY(v) - cy - py) + rad * 0.5, p.getZ(v) - pz).normalize(); nr.setXYZ(v, nv.x, nv.y, nv.z); }
+    const c = new Float32Array(p.count * 3);
+    for (let v = 0; v < p.count; v++) {   // низ кроны и внутренние комки темнее
+      const sh = Math.min(1, 0.55 + 0.45 * ((p.getY(v) - f.stem) / (2 * f.ry)) + (r() - 0.5) * 0.12) * (0.85 + rr * 0.15);
+      c[v * 3] = c[v * 3 + 1] = c[v * 3 + 2] = sh;
+    }
+    g.setAttribute('color', new THREE.BufferAttribute(c, 3));
+    parts.push(g);
+  }
+  return mergeGeos(parts);
+}
+
+/* ================= вид за окном ================= */
+const GROUND = -4.4;
+{
+  const bld = box(L + 2 * T + 8, -GROUND - 0.3, 50, new THREE.MeshStandardMaterial({ color: 0xd9ccb6, roughness: 0.9 }), 4, (GROUND - 0.3) / 2, 0, false);
+  scene.add(bld);
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(3000, 3000), new THREE.MeshStandardMaterial({ color: 0xa9a79c, roughness: 1 }));
+  ground.rotation.x = -Math.PI / 2; ground.position.y = GROUND; scene.add(ground);
+  const strip = (x0, x1, color, y = 0.02, map = null) => {
+    const mat = new THREE.MeshStandardMaterial({ color, roughness: 1 });
+    if (map) { mat.map = map.clone(); mat.map.needsUpdate = true; mat.map.repeat.set((x1 - x0) / 2, 300); }
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(x1 - x0, 600), mat); m.rotation.x = -Math.PI / 2; m.position.set((x0 + x1) / 2, GROUND + y, 0); scene.add(m);
+  };
+  const pavers = paverTexture(), grass = grassTexture();
+  strip(-14, X0 - T, 0xffffff, 0.02, pavers.red);   // променад из красной плитки
+  strip(-20, -14, 0xffffff, 0.02, grass);           // газон
+  strip(-36, -20, 0x4b4e53, 0.03);                  // проспект
+  strip(-42, -36, 0xffffff, 0.02, grass);
+  strip(-100, -42, 0xffffff, 0.025, pavers.grey);   // парковка
+  strip(-118, -100, 0xffffff, 0.02, grass);
+  // разметка
+  const dash = new THREE.InstancedMesh(new THREE.BoxGeometry(0.2, 0.02, 3), new THREE.MeshBasicMaterial({ color: 0xf2f2f2 }), 80);
+  const mtx = new THREE.Matrix4(); let di = 0;
+  for (const x of [-24, -28, -32]) for (let z = -150; z < 150 && di < 80; z += 11) { mtx.makeTranslation(x, GROUND + 0.05, z); dash.setMatrixAt(di++, mtx); }
+  dash.count = di; scene.add(dash);
+  // машины
+  const r = seeded(55);
+  const carCols = [0xf4f4f4, 0x1d1f22, 0x9aa1a8, 0xc9ccd0, 0x6f7a86, 0x8c2b2b, 0x2d4a6e, 0xe9e6df];
+  const body = new THREE.InstancedMesh(new THREE.BoxGeometry(1.8, 0.75, 4.4), new THREE.MeshStandardMaterial({ roughness: 0.35, metalness: 0.4 }), 260);
+  const cabin = new THREE.InstancedMesh(new THREE.BoxGeometry(1.6, 0.6, 2.4), new THREE.MeshStandardMaterial({ color: 0x2a3138, roughness: 0.2, metalness: 0.5 }), 260);
+  let ci = 0; const col = new THREE.Color();
+  for (let row = 0; row < 8; row++) for (let z = -110; z < 110; z += 2.6) {
+    if (r() < 0.22 || ci >= 260) continue;
+    const x = -46 - row * 6.6 - (row % 2) * 0.8;
+    mtx.makeTranslation(x, GROUND + 0.5, z); body.setMatrixAt(ci, mtx);
+    mtx.makeTranslation(x, GROUND + 1.15, z - 0.2); cabin.setMatrixAt(ci, mtx);
+    body.setColorAt(ci, col.set(carCols[Math.floor(r() * carCols.length)])); ci++;
+  }
+  body.count = cabin.count = ci; scene.add(body, cabin);
+  { // машины на проспекте: кузов, стеклянный салон, колёса; по две полосы в каждую сторону
+    const cg = (geo, x, y, z, rz = 0) => { geo.rotateZ(rz); geo.translate(x, y, z); return geo.toNonIndexed(); };
+    const shell = mergeGeos([cg(new THREE.BoxGeometry(1.8, 0.55, 4.4), 0, 0.6, 0), cg(new THREE.BoxGeometry(1.7, 0.08, 2.5), 0, 1.36, -0.25)]);
+    const glassG = mergeGeos([cg(new THREE.BoxGeometry(1.66, 0.5, 2.3), 0, 1.1, -0.25)]);
+    const wheelG = mergeGeos([-0.82, 0.82].flatMap(x => [-1.35, 1.35].map(z => cg(new THREE.CylinderGeometry(0.33, 0.33, 0.24, 12), x, 0.33, z, Math.PI / 2))));
+    const N = 22, rc = seeded(66);
+    const shells = new THREE.InstancedMesh(shell, new THREE.MeshStandardMaterial({ roughness: 0.3, metalness: 0.5 }), N);
+    const glasses = new THREE.InstancedMesh(glassG, new THREE.MeshStandardMaterial({ color: 0x1f2a33, roughness: 0.1, metalness: 0.6 }), N);
+    const wheels = new THREE.InstancedMesh(wheelG, new THREE.MeshStandardMaterial({ color: 0x151617, roughness: 0.8 }), N);
+    const cq = new THREE.Quaternion(), cs = new THREE.Vector3(1, 1, 1), cp = new THREE.Vector3(), up = new THREE.Vector3(0, 1, 0);
+    let k = 0;
+    for (const [x, dir] of [[-22, 1], [-26, 1], [-30, -1], [-34, -1]]) for (let z = -130 + rc() * 20; z < 130 && k < N; z += 14 + rc() * 26) {
+      mtx.compose(cp.set(x + (rc() - 0.5) * 0.3, GROUND, z), cq.setFromAxisAngle(up, dir > 0 ? 0 : Math.PI), cs);
+      shells.setMatrixAt(k, mtx); glasses.setMatrixAt(k, mtx); wheels.setMatrixAt(k, mtx);
+      shells.setColorAt(k, col.set(carCols[Math.floor(rc() * carCols.length)])); k++;
+    }
+    shells.count = glasses.count = wheels.count = k;
+    for (const m of [shells, glasses, wheels]) { m.frustumCulled = false; scene.add(m); }
+  }
+  // деревья в осенних тонах (фото 15–21): крона из множества неровных комков с просветами, ствол с ветвями;
+  // три породы-формы: округлая, высокая узкая, раскидистая
+  const TREES = [0, 1, 2].map(k => {
+    const trunk = new THREE.InstancedMesh(treeTrunkGeo(k), new THREE.MeshStandardMaterial({ color: 0x4a3b2e, roughness: 1 }), 120);
+    const crown = new THREE.InstancedMesh(treeCrownGeo(k, 20 + k * 7), new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95 }), 120);
+    trunk.count = crown.count = 0; scene.add(trunk, crown); return { trunk, crown };
+  });
+  const tc = [0xd9a92a, 0xcf8a2c, 0x8ea64c, 0xc3b63c, 0x6f8f3e, 0xe6bd48, 0xb7612b, 0x9aae58];
+  const q = new THREE.Quaternion(), sc = new THREE.Vector3(), pv = new THREE.Vector3(), up = new THREE.Vector3(0, 1, 0);
+  const tree = (x, z, s, k = Math.floor(r() * 3)) => {
+    const t = TREES[k]; if (t.crown.count >= 120) return;
+    q.setFromAxisAngle(up, r() * 6.28);
+    mtx.compose(pv.set(x, GROUND, z), q, sc.set(s * (0.9 + r() * 0.2), s, s * (0.9 + r() * 0.2)));
+    t.trunk.setMatrixAt(t.trunk.count++, mtx); t.crown.setMatrixAt(t.crown.count, mtx);
+    t.crown.setColorAt(t.crown.count++, col.set(tc[Math.floor(r() * tc.length)]).offsetHSL((r() - 0.5) * 0.03, 0, (r() - 0.5) * 0.08));
+  };
+  for (let z = -140; z < 140; z += 7) tree(-17 + r() * 1.5, z + r() * 3, 0.55 + r() * 0.15, r() < 0.5 ? 1 : 0);   // молодые деревья у променада
+  for (let z = -140; z < 140; z += 9) tree(-39 + r() * 2, z + r() * 3, 0.8 + r() * 0.3);
+  for (let i = 0; i < 60; i++) tree(-103 - r() * 22, -140 + r() * 280, 1 + r() * 0.5);
+  for (let i = 0; i < 30; i++) tree(-150 - r() * 120, -160 + r() * 320, 1.1 + r() * 0.5);
+  for (const t of TREES) for (const m of [t.trunk, t.crown]) { m.instanceMatrix.needsUpdate = true; m.frustumCulled = false; }
+  // променад и парковка — плитка (фото 16, 20); бордюры
+  const kerb = new THREE.MeshStandardMaterial({ color: 0xc9c6bd, roughness: 0.9 });
+  for (const x of [-14, -20, -36, -42]) scene.add(box(0.25, 0.16, 600, kerb, x, GROUND + 0.08, 0, false));
+  // фонари вдоль променада и проспекта
+  const poles = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.06, 0.09, 6, 8).translate(0, 3, 0), M.black, 60);
+  const heads = new THREE.InstancedMesh(new THREE.BoxGeometry(0.9, 0.12, 0.3).translate(-0.35, 6, 0), M.black, 60);
+  let pi = 0;
+  for (const x of [-14.6, -36.6]) for (let z = -130; z < 130; z += 16) { mtx.makeTranslation(x, GROUND, z + (x < -20 ? 8 : 0)); poles.setMatrixAt(pi, mtx); heads.setMatrixAt(pi++, mtx); }
+  poles.count = heads.count = pi; scene.add(poles, heads);
+  // прохожие (фото 8, 16): упрощённые фигуры — одежда и голова двумя InstancedMesh, у каждого свой цвет и поворот
+  {
+    const g = (geo, x, y, z, rz = 0) => { geo.rotateZ(rz); geo.translate(x, y, z); return geo.toNonIndexed(); };
+    const cloth = mergeGeos([
+      g(new THREE.CylinderGeometry(0.16, 0.19, 0.62, 8), 0, 1.14, 0),                                       // туловище
+      g(new THREE.CylinderGeometry(0.075, 0.065, 0.84, 6), -0.09, 0.42, 0), g(new THREE.CylinderGeometry(0.075, 0.065, 0.84, 6), 0.09, 0.42, 0.06),   // ноги, шаг
+      g(new THREE.CylinderGeometry(0.05, 0.045, 0.6, 6), -0.23, 1.12, 0, 0.12), g(new THREE.CylinderGeometry(0.05, 0.045, 0.6, 6), 0.23, 1.12, 0, -0.12),
+    ]);
+    const headG = mergeGeos([g(new THREE.SphereGeometry(0.11, 10, 8), 0, 1.6, 0), g(new THREE.CylinderGeometry(0.05, 0.05, 0.08, 6), 0, 1.47, 0)]);
+    const N = 46, rp = seeded(91);
+    const body = new THREE.InstancedMesh(cloth, new THREE.MeshStandardMaterial({ roughness: 0.9 }), N);
+    const head = new THREE.InstancedMesh(headG, new THREE.MeshStandardMaterial({ roughness: 0.8 }), N);
+    const clothes = [0x2c3440, 0x5a4a3c, 0x7d2f2f, 0x3d5566, 0x1e1f22, 0xb9a88c, 0x6b6f45, 0x8a8f96, 0x24395c, 0xc77f3a];
+    const skins = [0xe6c3a5, 0xd9ad8c, 0xc99674, 0xf0d2bb], hair = [0x2a1d16, 0x4a3426, 0x6b4c34, 0xb89a6c];
+    let pi = 0; const pq = new THREE.Quaternion(), ps = new THREE.Vector3(), pp = new THREE.Vector3(), upv = new THREE.Vector3(0, 1, 0);
+    const person = (x, z, rot) => {
+      if (pi >= N) return;
+      const s = 0.92 + rp() * 0.16;
+      mtx.compose(pp.set(x, GROUND + 0.02, z), pq.setFromAxisAngle(upv, rot), ps.set(s, s, s));
+      body.setMatrixAt(pi, mtx); head.setMatrixAt(pi, mtx);
+      body.setColorAt(pi, col.set(clothes[Math.floor(rp() * clothes.length)]));
+      head.setColorAt(pi, col.set(rp() < 0.75 ? skins[Math.floor(rp() * 4)] : hair[Math.floor(rp() * 4)])); pi++;
+    };
+    for (let i = 0; i < 26; i++) {   // идут по променаду вдоль дома, в обе стороны
+      const x = -7.5 - rp() * 6, z = -70 + rp() * 140;
+      if (Math.hypot(x + 10, z + 22) < 3.8) continue;
+      person(x, z, rp() < 0.5 ? 0 : Math.PI + (rp() - 0.5) * 0.3);
+    }
+    for (let i = 0; i < 7; i++) { const a = rp() * 6.28, d = 3.6 + rp() * 1.2; person(-10 + Math.cos(a) * d, -22 + Math.sin(a) * d, a + Math.PI); }   // у фонтана, лицом к воде
+    for (let i = 0; i < 8; i++) person(-44 - rp() * 50, -80 + rp() * 160, rp() * 6.28);   // у машин на парковке
+    body.count = head.count = pi; body.frustumCulled = head.frustumCulled = false; scene.add(body, head);
+  }
+  // фонтан на площади перед домом (фото 8)
+  {
+    const fx = -10, fz = -22, stone = new THREE.MeshStandardMaterial({ color: 0xd9d4ca, roughness: 0.8 });
+    const rim = new THREE.Mesh(new THREE.CylinderGeometry(2.9, 3.0, 0.5, 48, 1, true), stone); rim.position.set(fx, GROUND + 0.25, fz); scene.add(rim);
+    const lip = new THREE.Mesh(new THREE.TorusGeometry(2.95, 0.12, 6, 48), stone); lip.rotation.x = Math.PI / 2; lip.position.set(fx, GROUND + 0.5, fz); scene.add(lip);
+    const water = new THREE.Mesh(new THREE.CircleGeometry(2.9, 48), new THREE.MeshStandardMaterial({ color: 0x8fc3d6, roughness: 0.05, metalness: 0.3 }));
+    water.rotation.x = -Math.PI / 2; water.position.set(fx, GROUND + 0.4, fz); scene.add(water);
+    const jetM = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.55, depthWrite: false });
+    const center = new THREE.Mesh(new THREE.ConeGeometry(0.35, 2.6, 12, 1, true), jetM); center.position.set(fx, GROUND + 1.7, fz); scene.add(center);
+    for (let i = 0; i < 12; i++) { const a = i / 12 * Math.PI * 2; const j = new THREE.Mesh(new THREE.ConeGeometry(0.08, 1.1, 6, 1, true), jetM); j.position.set(fx + Math.cos(a) * 2.0, GROUND + 0.95, fz + Math.sin(a) * 2.0); scene.add(j); }
+  }
+}
+
+
+/* Национальная библиотека: ромбокубооктаэдр на стилобате */
+{
+  const lib = new THREE.Group(); lib.position.set(-300, GROUND, -45);
+  const pod = new THREE.Mesh(new THREE.BoxGeometry(70, 12, 70), new THREE.MeshStandardMaterial({ color: 0xd8d5cd, roughness: 0.6 }));
+  pod.position.y = 6; lib.add(pod);
+  const band = new THREE.Mesh(new THREE.BoxGeometry(70.4, 4, 70.4), new THREE.MeshStandardMaterial({ color: 0x3b5a6c, roughness: 0.15, metalness: 0.6 }));
+  band.position.y = 7; lib.add(band);
+  const a = 1, b = 1 + Math.SQRT2; const pts = [];
+  for (const [x, y, z] of [[a, a, b], [a, b, a], [b, a, a]]) for (const sx of [-1, 1]) for (const sy of [-1, 1]) for (const sz of [-1, 1]) pts.push(new THREE.Vector3(x * sx, y * sy, z * sz));
+  const dg = new ConvexGeometry(pts);
+  const dm = new THREE.Mesh(dg, new THREE.MeshPhysicalMaterial({ color: 0x5d8fb0, emissive: 0x16324a, roughness: 0.18, metalness: 0.35, clearcoat: 1, flatShading: true }));
+  const s = 7.6; dm.scale.setScalar(s); dm.position.y = 12 + b * s; dm.rotation.y = Math.PI / 4 + 0.25;
+  lib.add(dm);
+  const edges = new THREE.LineSegments(new THREE.EdgesGeometry(dg), new THREE.LineBasicMaterial({ color: 0xdfe9ef, transparent: true, opacity: 0.7 }));
+  edges.scale.setScalar(s * 1.002); edges.position.copy(dm.position); edges.rotation.copy(dm.rotation); lib.add(edges);
+  scene.add(lib);
+  // городская застройка на горизонте
+  // городская застройка: дома с окнами на фасадах — ближнее кольцо высоток (фото 19, 20) и дальний горизонт
+  const r = seeded(77);
+  const roof = new THREE.MeshStandardMaterial({ color: 0x8d9094, roughness: 0.9 });
+  const FAC = [
+    new THREE.MeshStandardMaterial({ map: facadeTexture('stone'), roughness: 0.8 }),
+    new THREE.MeshStandardMaterial({ map: facadeTexture('glass'), roughness: 0.25, metalness: 0.3 }),
+  ];
+  const building = (x, z, w, d, h, kind, rot) => {
+    const geo = new THREE.BoxGeometry(w, h, d), uv = geo.attributes.uv, nm = geo.attributes.normal;
+    for (let i = 0; i < uv.count; i++) {   // тайл фасада: 4 окна на 12 м, 4 этажа на 13 м
+      const span = Math.abs(nm.getX(i)) > 0.5 ? d : w;
+      uv.setXY(i, uv.getX(i) * Math.max(1, Math.round(span / 12)), uv.getY(i) * Math.max(1, Math.round(h / 13)));
+    }
+    const m = new THREE.Mesh(geo, [FAC[kind], FAC[kind], roof, roof, FAC[kind], FAC[kind]]);
+    m.position.set(x, GROUND + h / 2, z); m.rotation.y = rot; scene.add(m);
+  };
+  for (let i = 0; i < 90; i++) {
+    const ang = Math.PI + (r() - 0.5) * 2.4, dist = 380 + r() * 420;
+    const x = Math.cos(ang) * dist, z = Math.sin(ang) * dist;
+    if (Math.hypot(x + 300, z + 45) < 110) continue;
+    building(x, z, 18 + r() * 30, 18 + r() * 30, 13 + r() * 39, r() < 0.4 ? 1 : 0, r() * 0.6);
+  }
+  for (let i = 0; i < 16; i++) {   // ближние высотки по сторонам от библиотеки
+    const z = (i % 2 ? 1 : -1) * (110 + r() * 140), x = -150 - r() * 160;
+    building(x, z, 24 + r() * 20, 16 + r() * 10, 39 + Math.floor(r() * 3) * 13, r() < 0.5 ? 1 : 0, (r() - 0.5) * 0.3);
+  }
+  building(-420, -190, 14, 14, 91, 1, 0);   // высотка рядом с библиотекой (фото 01)
+}
+
+/* небо */
+const skyU = { top: { value: new THREE.Color(0x76a7d6) }, bottom: { value: new THREE.Color(0xe2ecf4) } };
+const skyGeo = new THREE.SphereGeometry(2500, 32, 24);
+skyGeo.setAttribute('color', new THREE.BufferAttribute(new Float32Array(skyGeo.attributes.position.count * 3), 3));
+const sky = new THREE.Mesh(skyGeo, new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.BackSide, depthWrite: false, fog: false, toneMapped: false }));
+function paintSky() {
+  const pos = skyGeo.attributes.position, col = skyGeo.attributes.color, c = new THREE.Color();
+  const t = skyU.top.value.clone().convertSRGBToLinear(), b = skyU.bottom.value.clone().convertSRGBToLinear();
+  for (let i = 0; i < pos.count; i++) { const h = Math.min(1, Math.max(0, pos.getY(i) / 2500 * 1.6 + 0.05)); c.copy(b).lerp(t, Math.pow(h, 0.8)); col.setXYZ(i, c.r, c.g, c.b); }
+  col.needsUpdate = true;
+}
+paintSky(); scene.add(sky);
+// облака (фото 19–21): полупрозрачный купол чуть ниже неба; вечером подсвечены закатом
+const clouds = new THREE.Mesh(new THREE.SphereGeometry(2400, 48, 16, 0, Math.PI * 2, 0, Math.PI / 2),
+  new THREE.MeshBasicMaterial({ map: cloudTexture(), transparent: true, depthWrite: false, side: THREE.BackSide, fog: false }));
+clouds.renderOrder = -1; scene.add(clouds);
+
+/* ================= свет ================= */
+const hemi = new THREE.HemisphereLight(0xdfe9f2, 0xb98f62, 0.55); scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xfff1dc, 3.2);
+sun.position.set(-22, 21, 14); sun.target.position.set(-1, 0, 0);
+sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048);
+Object.assign(sun.shadow.camera, { left: -11, right: 11, top: 11, bottom: -11, near: 1, far: 70 });
+sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.03;
+scene.add(sun, sun.target);
+const roomLights = [], bounceLights = [], BOUNCE = 0.22;
+for (const [x, z] of [[-3.8, -2.6], [-3.8, 2.6], [1.2, -1.6], [1.2, 4.0], [4.8, -2.8], [5.0, 4.0]]) {
+  // светильники светят вниз (как линейные LED): потолок остаётся тёмным, как на фото, и лампы на нём видны
+  const p = new THREE.SpotLight(0xfff4e6, 18, 0, Math.PI * 0.49, 0.35, 2); p.position.set(x, 3.9, z);
+  p.target.position.set(x, 0, z); scene.add(p, p.target); roomLights.push(p);
+  // отражённый от пола свет: слабый источник на середине высоты мягко подсвечивает потолок, балки и трубы
+  const b = new THREE.PointLight(0xfff4e6, 18 * BOUNCE, 0, 2); b.position.set(x, 2.2, z); scene.add(b); bounceLights.push(b);
+}
+const LIGHT = {
+  day: { sun: 3.0, sunCol: 0xfff1dc, sunPos: [-22, 21, 14], hemi: 0.55, room: 16, lamp: 2.2, top: 0x76a7d6, bottom: 0xe2ecf4, fog: 0xdde8f1, exp: 0.85, env: 0.4, cloud: 0xffffff },
+  evening: { sun: 1.6, sunCol: 0xffa25a, sunPos: [-30, 6, 8], hemi: 0.15, room: 30, lamp: 5, top: 0x3d5f8f, bottom: 0xf1b27a, fog: 0xc9a58a, exp: 0.9, env: 0.15, cloud: 0xf2b48c },
+};
+let lightFrom = null, lightTo = LIGHT.day, lightT = 1, lightStart = 0;
+const lerp = (a, b, t) => a + (b - a) * t;
+const cA = new THREE.Color(), cB = new THREE.Color();
+function setLight(name) {
+  lightFrom = snapshotLight(); lightTo = LIGHT[name]; lightStart = performance.now(); lightT = 0;
+}
+function snapshotLight() {
+  return { sun: sun.intensity, sunCol: sun.color.getHex(), sunPos: sun.position.toArray(), hemi: hemi.intensity, room: roomLights[0].intensity, lamp: M.lamp.emissiveIntensity, top: skyU.top.value.getHex(), bottom: skyU.bottom.value.getHex(), fog: scene.fog.color.getHex(), exp: renderer.toneMappingExposure, env: envI, cloud: clouds.material.color.getHex() };
+}
+let envI = 1;
+function applyLight(t) {
+  const A = lightFrom, B = lightTo; const e = ease(t);
+  sun.intensity = lerp(A.sun, B.sun, e);
+  sun.color.copy(cA.set(A.sunCol)).lerp(cB.set(B.sunCol), e);
+  sun.position.set(lerp(A.sunPos[0], B.sunPos[0], e), lerp(A.sunPos[1], B.sunPos[1], e), lerp(A.sunPos[2], B.sunPos[2], e));
+  hemi.intensity = lerp(A.hemi, B.hemi, e);
+  roomLights.forEach(p => p.intensity = lerp(A.room, B.room, e));
+  bounceLights.forEach(p => p.intensity = lerp(A.room, B.room, e) * BOUNCE);
+  lampMats.forEach(m => m.emissiveIntensity = lerp(A.lamp, B.lamp, e));
+  M.lamp.emissiveIntensity = lerp(A.lamp, B.lamp, e);
+  skyU.top.value.copy(cA.set(A.top)).lerp(cB.set(B.top), e);
+  skyU.bottom.value.copy(cA.set(A.bottom)).lerp(cB.set(B.bottom), e);
+  paintSky();
+  scene.fog.color.copy(cA.set(A.fog)).lerp(cB.set(B.fog), e);
+  clouds.material.color.copy(cA.set(A.cloud)).lerp(cB.set(B.cloud), e);
+  renderer.toneMappingExposure = lerp(A.exp, B.exp, e);
+  envI = lerp(A.env, B.env, e); setEnvIntensity(envI);
+}
+const lampMats = [];
+function setEnvIntensity(v) { scene.traverse(o => { if (o.material && 'envMapIntensity' in o.material) { const ms = Array.isArray(o.material) ? o.material : [o.material]; ms.forEach(m => { if (m.userData.envBase === undefined) m.userData.envBase = m.envMapIntensity; m.envMapIntensity = v * m.userData.envBase; }); } }); }
+
+/* ================= камера и ракурсы ================= */
+const VIEWS = {
+  overview: { pos: [9.6, 11.2, 10.4], target: [-0.6, 0.2, 0] },
+  windows: { pos: [-1.6, 1.55, 0.62], target: [-6.0, 2.0, 0.62], fov: 72 },
+  hall: { pos: [-5.2, 1.7, 3.9], target: [5.5, 1.25, -2.5] },
+  leftwall: { pos: [3.6, 1.6, 0.3], target: [-1.4, 1.9, 5.0], fov: 66 },
+  entry: { pos: [5.6, 2.4, 1.2], target: [-6.0, 1.3, -1.2], fov: 72 },
+};
+camera.position.set(...VIEWS.overview.pos); controls.target.set(...VIEWS.overview.target);
+let camAnim = null;
+function goView(name) {
+  const v = VIEWS[name];
+  camAnim = { t0: performance.now(), d: 1600, p0: camera.position.clone(), t0v: controls.target.clone(), p1: new THREE.Vector3(...v.pos), t1: new THREE.Vector3(...v.target), f0: baseFov, f1: v.fov || 45 };
+  controls.autoRotate = false;
+}
+function stepCam(now) {
+  if (!camAnim) return;
+  const t = Math.min(1, (now - camAnim.t0) / camAnim.d), e = ease(t);
+  camera.position.lerpVectors(camAnim.p0, camAnim.p1, e);
+  controls.target.lerpVectors(camAnim.t0v, camAnim.t1, e);
+  baseFov = camAnim.f0 + (camAnim.f1 - camAnim.f0) * e; fitCamera();
+  if (t >= 1) camAnim = null;
+}
+controls.addEventListener('start', () => { controls.autoRotate = false; camAnim = null; const h = document.getElementById('hint'); h.style.opacity = '0'; });
+
+/* ================= интерфейс ================= */
+const TEXT = {
+  empty: { eye: 'Свободная планировка', title: 'Пустой зал', cap: () => '123', capL: 'м² без перегородок', text: 'Зал 10 × 12 м: паркет-ёлочка, потолки 4,5 м и два арочных окна с видом на Национальную библиотеку.' },
+  lecture: { eye: 'Лекция и презентация', title: 'Мастер-класс', cap: () => modes.lecture.count, capL: 'мест в рядах', text: 'Экран и проектор у глухой стены: свет из окон падает сбоку и не засвечивает слайды. По центру — проход.' },
+  board: { eye: 'Переговоры и сессии', title: 'Большой стол', cap: () => modes.board.count, capL: 'персон за общим столом', text: 'Стратегическая сессия, переговоры или ужин: один стол 7,4 м вдоль зала, вода и блокноты на каждом месте.' },
+  tables: { eye: 'Воркшоп и командная работа', title: 'Отдельные столы', cap: () => modes.tables.count, capL: 'мест за 6 столами', text: 'Участники работают командами по шесть человек, на каждом столе — два монитора, у ведущего — флипчарт в центре зала.' },
+};
+function setCard(name) {
+  const t = TEXT[name];
+  document.getElementById('cardEyebrow').textContent = t.eye;
+  document.getElementById('cardTitle').textContent = t.title;
+  document.getElementById('cardCap').textContent = t.cap();
+  document.getElementById('cardCapLabel').textContent = t.capL;
+  document.getElementById('cardText').textContent = t.text;
+}
+function press(sel, attr, val) { document.querySelectorAll(sel).forEach(b => b.setAttribute('aria-pressed', String(b.dataset[attr] === val))); }
+document.querySelectorAll('[data-mode]').forEach(b => b.addEventListener('click', () => { setMode(b.dataset.mode); setCard(b.dataset.mode); press('[data-mode]', 'mode', b.dataset.mode); }));
+document.querySelectorAll('[data-view]').forEach(b => b.addEventListener('click', () => { goView(b.dataset.view); press('[data-view]', 'view', b.dataset.view); }));
+document.querySelectorAll('[data-light]').forEach(b => b.addEventListener('click', () => { setLight(b.dataset.light); press('[data-light]', 'light', b.dataset.light); }));
+
+let baseFov = 45;
+const HASH = (location.hash || '').slice(1).split('-');
+const WIDE = HASH.includes('wide');
+function fitCamera() {
+  if (WIDE) { const z0 = renderer.getSize(new THREE.Vector2()); if (z0.x !== 1280) renderer.setSize(1280, 720, false); canvas.style.width = '100%'; canvas.style.height = 'auto'; canvas.style.inset = 'auto'; canvas.style.top = '50%'; canvas.style.transform = 'translateY(-50%)'; camera.aspect = 16 / 9; camera.fov = baseFov; camera.updateProjectionMatrix(); return; }
+  camera.aspect = innerWidth / innerHeight;
+  // на вертикальных экранах держим горизонтальный угол обзора не уже ~58°
+  const minH = THREE.MathUtils.degToRad(58);
+  const vNeeded = 2 * Math.atan(Math.tan(minH / 2) / camera.aspect);
+  camera.fov = Math.min(80, Math.max(baseFov, THREE.MathUtils.radToDeg(vNeeded)));
+  camera.updateProjectionMatrix();
+  const sz = renderer.getSize(new THREE.Vector2());
+  if (sz.x !== innerWidth || sz.y !== innerHeight) renderer.setSize(innerWidth, innerHeight);
+}
+fitCamera();
+addEventListener('resize', fitCamera);
+document.getElementById('fold').addEventListener('click', e => {
+  const c = document.getElementById('card'), f = c.classList.toggle('folded');
+  e.currentTarget.textContent = f ? '+' : '–';
+  e.currentTarget.setAttribute('aria-expanded', String(!f));
+  e.currentTarget.setAttribute('aria-label', f ? 'Показать описание' : 'Свернуть описание');
+});
+
+setMode('empty'); setCard('empty');
+// ссылки вида #windows-board-evening сразу открывают нужный ракурс, расстановку и свет
+function applyHash() {
+  const tokens = (location.hash || '').slice(1).split('-');
+  for (const t of tokens) {
+    if (VIEWS[t]) { camAnim = null; baseFov = VIEWS[t].fov || 45; fitCamera(); camera.position.set(...VIEWS[t].pos); controls.target.set(...VIEWS[t].target); controls.autoRotate = false; press('[data-view]', 'view', t); }
+    if (modes[t]) { setMode(t); setCard(t); press('[data-mode]', 'mode', t); }
+    if (LIGHT[t]) { lightFrom = snapshotLight(); lightTo = LIGHT[t]; lightT = 1; applyLight(1); press('[data-light]', 'light', t); }
+  }
+}
+applyHash(); setTimeout(applyHash, 400);
+addEventListener('hashchange', applyHash);
+
+/* ================= цикл ================= */
+let first = true;
+renderer.setAnimationLoop(now => {
+  stepCam(now); stepAnims(now);
+  if (lightT < 1) { lightT = Math.min(1, (now - lightStart) / 1400); applyLight(lightT); }
+  controls.update();
+  updateFades();
+  renderer.render(scene, camera);
+  if (first) { first = false; document.getElementById('loading').classList.add('done'); }
+});
+window.__arka = { scene, camera, controls, goView, setMode, setLight, renderer };
+} catch (e) { window.__err(e.message); console.error(e); }
+</script>
+<script>
+// запасной вариант, если 3D не загрузилось
+(function check(n) {
+  setTimeout(() => {
+    const l = document.getElementById('loading');
+    if (!l || l.classList.contains('done')) return;
+    if (document.hidden) return check(n);            // в фоновой вкладке кадры не рисуются — ждём
+    if (n > 0) return check(n - 1);
+    l.querySelector('p').textContent = 'Не удалось запустить 3D. Обновите страницу или откройте её в Chrome, Safari или Edge.';
+  }, 5000);
+})(3);
+</script>
