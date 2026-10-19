@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<base href="../../">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Футер — три варианта</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600&family=Geist:wght@400;500&family=Geist+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="css/style.css">
+<style>
+  /* Стенд: каждый вариант — отдельный экран на вечернем фоне, футер — последний шаг после «Контактов» */
+  html, body { overflow: auto; height: auto; }
+  .v { position: relative; min-height: 100vh; min-height: 100svh; display: flex; flex-direction: column; justify-content: flex-end;
+       padding: var(--edge); background: url(assets/img/place/promenade-evening.jpg) 30% center / cover; }
+  .v::before { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(19, 21, 31, 0) 25%, rgba(19, 21, 31, .85) 75%); }
+  .v > * { position: relative; }
+  .tag { position: absolute; top: var(--edge); left: var(--edge); font: 500 12px/1 var(--f-mono); letter-spacing: .1em; text-transform: uppercase;
+         background: var(--portal); color: var(--night); padding: 8px 10px; border-radius: var(--r-badge); }
+  .ft { background: var(--glass); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); border: 1px solid var(--line);
+        border-radius: var(--radius); padding: clamp(22px, 3vw, 40px); color: var(--text-soft); font-size: 15px; }
+  .ft a { text-decoration: none; } .ft a:hover { color: var(--portal); }
+  .lbl { font: 500 12px/1 var(--f-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-bottom: 14px; }
+  .ft b { color: var(--text); font-weight: 400; }
+  .row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 20px 40px; }
+  .bottom { margin-top: 28px; padding-top: 18px; border-top: 1px solid var(--line); display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px 24px;
+            font: 500 12px/1.4 var(--f-mono); letter-spacing: .1em; text-transform: uppercase; }
+  .cols { display: grid; gap: 28px; }
+  .list { display: grid; gap: 8px; }
+  /* А */
+  .huge { font: 400 clamp(56px, 12vw, 190px)/.85 var(--f-display); letter-spacing: -.045em; color: var(--paper); margin-left: -.05em; }
+  .a .cols { grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--line); }
+  .a .nav { display: flex; flex-wrap: wrap; gap: 8px 22px; }
+  /* Б */
+  .b .cols { grid-template-columns: 1.5fr 1fr 1fr 1.2fr; }
+  .b .lockup { --h: 52px; color: var(--paper); }
+  .b p.about { margin-top: 18px; max-width: 30ch; }
+  /* В */
+  .phone { font: 400 clamp(40px, 7vw, 104px)/1 var(--f-display); letter-spacing: -.03em; color: var(--paper); white-space: nowrap; }
+  .c .acts { display: flex; gap: 10px; }
+  .c .nav { display: flex; flex-wrap: wrap; gap: 8px 22px; }
+  @media (max-width: 860px) {
+    .a .cols { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+    .a .cols > :first-child { grid-column: 1 / -1; }
+    .b .cols { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+    .b .cols > :first-child, .b .cols > :last-child { grid-column: 1 / -1; }
+  }
+  @media (max-width: 560px) {
+    .ft { font-size: 14px; }
+    .phone { font-size: 34px; }
+    .c .acts { width: 100%; } .c .acts .btn { flex: 1; }
+  }
+</style>
+</head>
+<body>
+
+<!-- А. Крупный знак -->
+<section class="v a">
+  <span class="tag">А · крупный знак</span>
+  <footer class="ft">
+    <div class="row">
+      <div class="huge">АРКА 123</div>
+      <div style="display:grid;gap:14px;justify-items:start">
+        <span>Встречаемся напротив библиотеки</span>
+        <a class="btn" href="#">Забронировать зал</a>
+      </div>
+    </div>
+    <div class="cols">
+      <div><p class="lbl">Разделы</p><nav class="nav"><a href="#">О&nbsp;зале</a><a href="#">Помещение</a><a href="#">Форматы</a><a href="#">Галерея</a><a href="#">Тарифы</a><a href="#">Отзывы</a></nav></div>
+      <div><p class="lbl">Адрес</p><div class="list"><b>Минск, ул.&nbsp;Мстиславца,&nbsp;10</b><span>напротив Национальной библиотеки</span></div></div>
+      <div><p class="lbl">Связь</p><div class="list"><b>+375&nbsp;29&nbsp;000-01-23</b><span>hello@arka123.by · 8:00–22:00</span></div></div>
+    </div>
+    <div class="bottom"><span>© 2026 АРКА&nbsp;123</span><a href="#">Наверх ↑</a></div>
+  </footer>
+</section>
+
+<!-- Б. Визитка с колонками -->
+<section class="v b">
+  <span class="tag">Б · визитка с колонками</span>
+  <footer class="ft">
+    <div class="cols">
+      <div><span class="lockup" data-logo></span><p class="about">Зал 123&nbsp;м² с&nbsp;арочными окнами для мастер-классов, лекций и&nbsp;семинаров</p></div>
+      <div><p class="lbl">Зал</p><div class="list"><a href="#">О&nbsp;зале</a><a href="#">Помещение в&nbsp;3D</a><a href="#">Галерея</a></div></div>
+      <div><p class="lbl">Аренда</p><div class="list"><a href="#">Форматы</a><a href="#">Тарифы</a><a href="#">Отзывы</a></div></div>
+      <div><p class="lbl">Контакты</p><div class="list"><b>+375&nbsp;29&nbsp;000-01-23</b><a href="#">hello@arka123.by</a><span>Минск, ул.&nbsp;Мстиславца,&nbsp;10</span></div></div>
+    </div>
+    <div class="bottom"><span>© 2026 АРКА&nbsp;123</span><span>Ежедневно 8:00–22:00</span></div>
+  </footer>
+</section>
+
+<!-- В. Большой телефон -->
+<section class="v c">
+  <span class="tag">В · большой телефон</span>
+  <footer class="ft">
+    <p class="lbl">Остались вопросы? Аркадий на&nbsp;связи</p>
+    <div class="row">
+      <a class="phone" href="#">+375&nbsp;29&nbsp;000-01-23</a>
+      <div class="acts"><a class="btn" href="#">Позвонить</a><a class="btn btn--ghost" href="#">Написать</a></div>
+    </div>
+    <div class="bottom" style="font:inherit;letter-spacing:0;text-transform:none">
+      <nav class="nav"><a href="#">О&nbsp;зале</a><a href="#">Помещение</a><a href="#">Форматы</a><a href="#">Галерея</a><a href="#">Тарифы</a><a href="#">Отзывы</a></nav>
+      <span style="font:500 12px/1.4 var(--f-mono);letter-spacing:.1em;text-transform:uppercase">© 2026 АРКА&nbsp;123 · Мстиславца,&nbsp;10</span>
+    </div>
+  </footer>
+</section>
+
+<script src="js/logo.js"></script>
+</body>
+</html>

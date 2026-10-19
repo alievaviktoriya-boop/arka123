@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<base href="../../">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Логотип — стенд</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+  /* Стенд прелоадера без сайта: тот же знак и стили, ползунок времени вместо выхода */
+  body { margin: 0; min-height: 100vh; overflow: hidden; }
+  .stand { position: fixed; inset: 0; background: radial-gradient(120% 90% at 50% 110%, var(--lining) 0%, var(--night) 62%); color: var(--paper); display: grid; place-items: center; align-content: center; gap: 36px; }
+  .stand .lockup { --h: min(112px, calc((100vw - 48px) / 2.85)); }
+  .ctl { position: fixed; left: 16px; right: 16px; bottom: 16px; display: flex; gap: 12px; align-items: center; font: 12px/1 "Geist Mono", monospace; color: var(--paper); }
+  .ctl input { flex: 1; }
+  .ctl button { font: inherit; padding: 6px 10px; }
+</style>
+</head>
+<body>
+  <div class="stand"><div class="lockup" id="lk" data-logo data-logo-portal></div></div>
+  <div class="ctl">
+    <button id="replay" type="button">▶ заново</button>
+    <input id="t" type="range" min="0" max="3500" step="50" value="0" aria-label="Время анимации">
+    <output id="tv">0.00 с</output>
+  </div>
+  <script src="js/logo.js"></script>
+  <script>
+    const lk = document.getElementById("lk"), t = document.getElementById("t"), tv = document.getElementById("tv");
+    function play() { lk.classList.remove("play"); void lk.offsetWidth; lk.classList.add("play"); }
+    // Остановить все анимации знака в момент ms — чтобы рассмотреть фазу
+    function at(ms) {
+      lk.getAnimations({ subtree: true }).forEach((a) => { a.pause(); a.currentTime = ms; });
+      tv.textContent = (ms / 1000).toFixed(2) + " с";
+    }
+    document.getElementById("replay").onclick = play;
+    t.oninput = () => { if (!lk.classList.contains("play")) play(); at(+t.value); };
+    window.seek = (ms) => { if (!lk.classList.contains("play")) play(); t.value = ms; at(ms); };
+    play();
+  </script>
+</body>
+</html>

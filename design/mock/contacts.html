@@ -1,0 +1,119 @@
+<!doctype html>
+<!-- Макет экрана «Контакты» для выбора раскладки: ?v=1 — как первый экран, ?v=1open — то же с открытой формой, ?v=3 — компактная плашка слева.
+     Стили сайта настоящие; добавлены только правила макета ниже. -->
+<html lang="ru" class="scenes-on">
+<head>
+  <meta charset="utf-8">
+  <base href="../../">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500&family=Geist:wght@400;500&family=Geist+Mono:wght@400;500&display=block">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    /* вариант 1: контакты строками под заголовком */
+    .contact-lines { display: grid; grid-template-columns: auto auto; gap: 14px 40px; margin-top: 22px; }
+    .contact-lines span { display: block; font: 500 12px/1.6 var(--f-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--text-soft); }
+    .contact-lines a, .contact-lines b { font-weight: 400; font-size: 17px; color: var(--text); text-decoration: none; }
+    /* вариант 1: форма — стеклянная полоса слева, как меню */
+    .book-strip { position: fixed; z-index: 45; inset: 0 auto 0 0; width: min(400px, 90vw); padding: calc(var(--header-h) + 40px) var(--edge) 32px;
+      background: var(--glass); -webkit-backdrop-filter: blur(16px) saturate(1.1); backdrop-filter: blur(16px) saturate(1.1); border-right: 1px solid var(--line);
+      display: grid; align-content: start; gap: 16px; }
+    .book-strip[hidden] { display: none; }
+    .form-open #v1 .scene__panel { opacity: 0; }   /* пока форма открыта, текст под ней гаснет */
+    .book-strip h3 { font: 300 30px/1.1 var(--f-display); }
+    .book-strip p { color: var(--text-soft); font-size: 15px; }
+    .book-strip label { display: grid; gap: 6px; font-size: 14px; color: var(--text-soft); }
+    .book-strip input { background: rgba(19, 21, 31, .7); border: 1px solid var(--line); border-radius: var(--r-btn); padding: 12px; color: var(--text); color-scheme: dark; font: inherit; }
+    .book-strip .btn { margin-top: 8px; }
+    .book-strip__close { position: absolute; top: 16px; right: 16px; width: 40px; height: 40px; border: 1px solid rgba(233, 236, 238, .35); border-radius: var(--r-btn); background: none; color: var(--text); font-size: 18px; }
+    /* вариант 3: плашка слева, уже */
+    .v3 .scene__panel--contacts { max-width: 400px; }
+    .v3 .contact-list { grid-template-columns: 1fr; }
+    .v3 .book-form__row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+    .v3 .book-form input { min-width: 0; }
+    .v3 .book-form .btn { padding-inline: 16px; }
+  </style>
+  <script src="js/logo.js" defer></script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="#"><span class="lockup" data-logo></span></a>
+    <nav class="site-nav"><a href="#">О зале</a><a href="#">Помещение</a><a href="#">Форматы</a><a href="#">Галерея</a><a href="#">Тарифы</a><a href="#">Отзывы</a><a href="#" class="is-current">Контакты</a></nav>
+    <a class="btn btn--small" href="#">Забронировать</a>
+    <button class="nav-toggle" type="button"><span></span><span></span></button>
+  </header>
+
+  <div class="stage is-on" id="stage" style="--mx: 25% 50%">
+    <div class="stage__layer stage__layer--bg is-on" style="background-image: url(assets/img/place/promenade-evening.jpg); transform: scale(1.02)"></div>
+    <div class="stage__shade"></div>
+  </div>
+
+  <main class="scenes">
+    <!-- вариант 1 -->
+    <section class="scene scene--hero is-active" id="v1">
+      <div class="scene__panel scene__panel--bare reveal in">
+        <p class="eyebrow">Контакты</p>
+        <h1>Встречаемся напротив библиотеки</h1>
+        <div class="contact-lines">
+          <div><span>Адрес</span><a href="#">Минск, ул. Мстиславца,&nbsp;10</a></div>
+          <div><span>Телефон</span><a href="#">+375&nbsp;29&nbsp;000-01-23</a></div>
+          <div><span>Почта</span><a href="#">hello@arka123.by</a></div>
+          <div><span>Часы</span><b>Ежедневно 8:00–22:00</b></div>
+        </div>
+        <div class="actions">
+          <a class="btn" href="#">Забронировать зал</a>
+          <a class="btn btn--ghost" href="#">Позвонить</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- вариант 3 -->
+    <section class="scene v3" id="v3">
+      <div class="scene__panel scene__panel--contacts reveal in">
+        <p class="eyebrow eyebrow--portal">Контакты</p>
+        <h2>Встречаемся напротив библиотеки</h2>
+        <ul class="contact-list">
+          <li><span>Адрес</span><a href="#">Минск, ул. Мстиславца,&nbsp;10</a></li>
+          <li><span>Телефон</span><a href="#">+375&nbsp;29&nbsp;000-01-23</a></li>
+          <li><span>Почта</span><a href="#">hello@arka123.by</a></li>
+          <li><span>Часы</span>Ежедневно 8:00–22:00</li>
+        </ul>
+        <form class="book-form">
+          <div class="book-form__row">
+            <label>Имя<input></label>
+            <label>Телефон<input placeholder="+375"></label>
+          </div>
+          <div class="book-form__row book-form__row--submit">
+            <label>Дата<input type="date"></label>
+            <button class="btn" type="button">Забронировать</button>
+          </div>
+        </form>
+        <footer class="site-footer">© 2026 АРКА&nbsp;123&nbsp;· Минск, ул. Мстиславца, 10</footer>
+      </div>
+    </section>
+  </main>
+
+  <aside class="book-strip" id="strip" hidden>
+    <button class="book-strip__close" type="button">×</button>
+    <p class="eyebrow eyebrow--portal">Бронирование</p>
+    <h3>Оставьте заявку&nbsp;— перезвоним в&nbsp;течение часа</h3>
+    <label>Имя<input></label>
+    <label>Телефон<input placeholder="+375"></label>
+    <label>Дата<input type="date"></label>
+    <button class="btn" type="button">Отправить заявку</button>
+    <p>Или позвоните: +375&nbsp;29&nbsp;000-01-23</p>
+  </aside>
+
+  <div class="scene-ui"><div class="scene-counter"><span>10 / 10</span><span class="scene-counter__bar"><i style="width: 100%"></i></span><span>Контакты</span></div></div>
+
+  <script>
+    const v = new URLSearchParams(location.search).get("v") || "1";
+    const v1 = document.getElementById("v1"), v3 = document.getElementById("v3");
+    if (v === "3") {
+      v1.classList.remove("is-active"); v3.classList.add("is-active");
+      document.getElementById("stage").dataset.shade = "";
+    } else {
+      document.getElementById("stage").dataset.shade = "hero";
+      if (v === "1open") { document.getElementById("strip").hidden = false; document.documentElement.classList.add("form-open"); }
+    }
+  </script>
+</body>
+</html>
