@@ -1,198 +1,480 @@
 /* ==========================================================================
-   Токены дизайна — меняйте цвета, шрифты и отступы только здесь
+   Токены бренда АРКА 123 — палитра Б (docs/moodboard.md): холодный фон и текст,
+   кремовый — только знак и главная кнопка, голубой портал — единственный яркий акцент
    ========================================================================== */
 :root {
-  --color-bg: #ffffff;
-  --color-surface: #f5f5f4;
-  --color-text: #1c1917;
-  --color-muted: #57534e;
-  --color-accent: #2563eb;
-  --color-accent-contrast: #ffffff;
-  --color-border: #e7e5e4;
+  /* фирменные */
+  --graphite: #203641;   /* знак, текст на светлом */
+  --cloak: #39434B;      /* плащ Аркадия */
+  --lining: #274A6E;     /* подкладка — глубокий синий градиентов */
+  --portal: #7FD3FF;     /* свечение портала */
+  --paper: #F1ECE3;      /* крем: знак, главная кнопка, светлая карточка */
 
-  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --font-size-base: 1rem;
-  --line-height: 1.6;
+  /* сайт целиком лежит на тёмном видео-фоне */
+  --night: #13151F;
+  --night-2: #1A2433;
+  --text: #E9ECEE;
+  --text-soft: #C2CDD8;   /* светлее: на телефоне за плашкой бывает светлая стена — контраст не ниже 4,5 : 1 */
+  --muted: #6E8799;
+  --line: rgba(233, 236, 238, .12);
+  --glass: rgba(19, 21, 31, .8);
+  --glass-card: rgba(233, 236, 238, .05);
+  --sheen: rgba(255, 251, 244, .85);
 
-  --space-1: 0.25rem;
-  --space-2: 0.5rem;
-  --space-3: 1rem;
-  --space-4: 1.5rem;
-  --space-5: 2.5rem;
-  --space-6: 4rem;
+  --f-display: "Manrope",   /* фирменный: как в логотипе и рекламных материалах */
+              "Segoe UI", system-ui, sans-serif;
+  --f-body: "Geist", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "Geist Mono", ui-monospace, Consolas, monospace;
 
-  --radius: 0.5rem;
-  --container: 72rem;
-  --gutter: 1rem;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-bg: #0c0a09;
-    --color-surface: #1c1917;
-    --color-text: #f5f5f4;
-    --color-muted: #a8a29e;
-    --color-accent: #60a5fa;
-    --color-accent-contrast: #0c0a09;
-    --color-border: #292524;
-  }
+  --gutter: clamp(16px, 4vw, 40px);
+  --edge: clamp(16px, 3.5vw, 56px);   /* общая левая/правая ось: логотип, текст сцен, счётчик, «↓» */
+  --radius: 10px;        /* плашки и карточки */
+  --r-btn: 6px;          /* кнопки и поля */
+  --r-badge: 4px;
+  --header-h: 72px;
+  --ui-h: 64px;          /* нижняя полоса со счётчиком сцен */
+  --ease-out: cubic-bezier(.16, 1, .3, 1);
 }
 
 /* ==========================================================================
-   Базовый сброс
+   Сброс и база
    ========================================================================== */
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-}
-
-* {
-  margin: 0;
-}
-
-html {
-  scroll-behavior: smooth;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
-  }
-}
+*, *::before, *::after { box-sizing: border-box; }
+* { margin: 0; }
+html { -webkit-text-size-adjust: 100%; scroll-padding-top: var(--header-h); }
+html.is-loading, html.nav-open, html.scenes-on { overflow: hidden; }
 
 body {
   min-height: 100vh;
-  font-family: var(--font-sans);
-  font-size: var(--font-size-base);
-  line-height: var(--line-height);
-  color: var(--color-text);
-  background: var(--color-bg);
+  background: var(--night);
+  color: var(--text);
+  font: 400 17px/1.6 var(--f-body);
   -webkit-font-smoothing: antialiased;
+  overflow-x: clip;
 }
 
-img,
-svg,
-video {
-  display: block;
-  max-width: 100%;
-  height: auto;
-}
+img, svg, video, canvas, iframe { display: block; max-width: 100%; }
+img { height: auto; }
+a { color: inherit; }
+ul { padding: 0; list-style: none; }
+button, input, select { font: inherit; color: inherit; }
 
-a {
-  color: var(--color-accent);
-}
+h1, h2, h3 { font-family: var(--f-display); line-height: 1.1; letter-spacing: -.02em; text-wrap: balance; }
+h1 { font-size: clamp(38px, 6vw, 76px); font-weight: 400; }
+h2 { font-size: clamp(30px, 3.8vw, 50px); font-weight: 400; }
+/* оптическая компенсация: у крупных букв (В, н, Б) поле слева ~0,065em — без сдвига заголовок «отступает» от оси */
+h1, h2 { margin-left: -.065em; }
+h3 { font-size: 19px; font-weight: 600; letter-spacing: -.01em; }
 
-h1,
-h2,
-h3 {
-  line-height: 1.2;
-  text-wrap: balance;
-}
+:focus-visible { outline: 2px solid var(--portal); outline-offset: 3px; }
 
-h1 { font-size: clamp(2rem, 5vw, 3.5rem); }
-h2 { font-size: clamp(1.5rem, 3vw, 2.25rem); margin-bottom: var(--space-3); }
+.skip-link { position: absolute; left: 16px; top: -100px; z-index: 100; background: var(--paper); color: var(--graphite); padding: 8px 12px; border-radius: var(--r-btn); }
+.skip-link:focus { top: 16px; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
-:focus-visible {
-  outline: 2px solid var(--color-accent);
-  outline-offset: 2px;
-}
+.eyebrow { font: 500 13px/1 var(--f-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--text-soft); margin-bottom: 14px; }
+.eyebrow--portal { color: var(--portal); }
+/* на первом экране надзаголовок лежит прямо на видео (синяя библиотека) — светлый, с мягкой тенью */
+.scene--hero .eyebrow { color: var(--text); text-shadow: 0 1px 14px rgba(19, 21, 31, .9), 0 0 2px rgba(19, 21, 31, .6); }
+.lead { font-size: clamp(18px, 1.6vw, 21px); color: var(--text-soft); max-width: 56ch; }
+.hint { color: var(--text-soft); font-size: 15px; max-width: 40ch; }
+.link-mono { font: 500 14px/1 var(--f-mono); letter-spacing: .06em; color: var(--text-soft); white-space: nowrap; }
 
 /* ==========================================================================
-   Раскладка
+   Кнопки
    ========================================================================== */
-.container {
-  width: 100%;
-  max-width: var(--container);
-  margin-inline: auto;
-  padding-inline: var(--gutter);
+.btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  font: 500 13px/1 var(--f-body); letter-spacing: .14em; text-transform: uppercase;
+  white-space: nowrap; text-decoration: none; cursor: pointer;
+  color: var(--night); border: 1px solid var(--paper); border-radius: var(--r-btn); padding: 17px 28px;
+  background: var(--paper);
+  transition: background-color .3s ease, border-color .3s ease, color .3s ease;
 }
-
-.section {
-  padding-block: var(--space-6);
-}
-
-.section--alt {
-  background: var(--color-surface);
-}
-
-.skip-link {
-  position: absolute;
-  left: var(--space-3);
-  top: -100%;
-}
-
-.skip-link:focus {
-  top: var(--space-3);
-}
+.btn:hover { background-color: var(--portal); border-color: var(--portal); }
+.btn--small { padding: 12px 18px; font-size: 12px; }
+.btn--ghost { background-color: transparent; color: var(--text); border-color: rgba(233, 236, 238, .5); }
+.btn--ghost:hover { background-color: rgba(233, 236, 238, .1); border-color: var(--text); }
+@media (prefers-reduced-motion: reduce) { .btn { transition: none; } }
+.actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
 
 /* ==========================================================================
-   Компоненты
+   Логотип: знак + надпись + слоган (маски из оригинальных PNG)
+   ========================================================================== */
+.lockup { --h: 60px; font-size: var(--h); display: inline-flex; align-items: flex-start; gap: .084em; color: currentColor; line-height: 0; }
+.lockup .mk { width: .8814em; height: 1em; flex: none; }
+.lockup svg { width: 100%; height: 100%; overflow: visible; }
+.lockup .txt { position: relative; width: 1.884em; height: 1em; flex: none; }
+.lockup .wm, .lockup .sl { position: absolute; background: currentColor; -webkit-mask: var(--img) center / 100% 100% no-repeat; mask: var(--img) center / 100% 100% no-repeat; }
+.lockup .wm { --img: url(../assets/img/logo/wordmark.png); top: .291em; left: 0; width: 1.884em; height: .332em; }
+.lockup .sl { --img: url(../assets/img/logo/slogan.png); top: .69em; left: .017em; width: 1.748em; height: .284em; }
+.lockup .gleam { opacity: 0; stroke: var(--sheen); }
+.lockup .glow, .lockup .core { opacity: 0; fill: none; }
+.lockup .glow { stroke: var(--portal); stroke-width: 44; }
+.lockup .core { stroke: var(--sheen); stroke-width: 12; stroke-linecap: round; }
+
+/* сценарий лоадера «портал Аркадия»: арку чертит светящаяся линия и остывает до кремового знака */
+.play .glow, .play .core { stroke-dasharray: 1 1; animation: draw 1.6s cubic-bezier(.45, 0, .2, 1) both, cool 2.4s cubic-bezier(.37, 0, .63, 1) both; }
+.play .arch { animation: emerge .9s 1.5s cubic-bezier(.37, 0, .63, 1) both; }
+/* цифры проявляются одним слоем: маски «2» и «3» перекрываются, по отдельности на стыке вспыхивает полоса */
+.play .ds { animation: emerge 1.2s 1.5s cubic-bezier(.37, 0, .63, 1) both; }
+.play .wm { animation: focus 1s 2.3s var(--ease-out) both; }
+.play .sl { animation: focus .9s 2.55s var(--ease-out) both; }
+@keyframes draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@keyframes cool { 0%, 60% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes emerge { from { opacity: 0; } to { opacity: 1; } }
+@keyframes flash { 0% { opacity: 0; stroke-dashoffset: 0; } 30% { opacity: .9; } 100% { opacity: 0; stroke-dashoffset: 0; } }
+@keyframes focus { from { opacity: 0; filter: blur(8px); transform: translateY(.04em); } to { opacity: 1; filter: blur(0); transform: none; } }
+
+/* ховер: тонкий блик пробегает по арке */
+.hov .gleam { stroke-dasharray: .2 .8; animation: gleam 1.5s cubic-bezier(.45, 0, .55, 1) both; }
+@keyframes gleam { 0% { opacity: 0; stroke-dashoffset: 0; } 20% { opacity: 1; } 80% { opacity: 1; } 100% { opacity: 0; stroke-dashoffset: -.82; } }
+@media (prefers-reduced-motion: reduce) { .play *, .hov * { animation: none !important; } }
+
+/* полноэкранный лоадер */
+/* тёмная заставка (Overworld Audio): светлый знак, внизу мелкий счётчик загрузки */
+.loader { position: fixed; inset: 0; z-index: 90; background: radial-gradient(120% 90% at 50% 110%, var(--lining) 0%, var(--night) 62%); color: var(--paper); display: grid; place-items: center; align-content: center; gap: 36px; padding: 24px; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; }
+.loader[hidden] { display: none; }
+.loader .lockup { --h: min(112px, calc((100vw - 48px) / 2.85)); }
+.loader__count { position: absolute; left: 0; right: 0; bottom: max(40px, 9vh); text-align: center; font: 400 12px/1 var(--f-mono); letter-spacing: .3em; color: var(--text-soft); }
+.loader.leaving .loader__count { opacity: 0; transition: opacity .4s; }
+.loader.leaving .wm, .loader.leaving .sl, .loader.leaving .ds { opacity: 0 !important; transition: opacity .5s cubic-bezier(.37, 0, .63, 1); }
+/* перед раскрытием окна проём вспыхивает порталом */
+.loader.leaving .glow { animation: flash 1s cubic-bezier(.37, 0, .63, 1) both; }
+.loader .mk { will-change: transform; }
+
+/* ==========================================================================
+   Шапка — одна на все сцены, прозрачная поверх видео
    ========================================================================== */
 .site-header {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  background: var(--color-bg);
-  border-bottom: 1px solid var(--color-border);
+  position: fixed; inset: 0 0 auto; z-index: 50; height: var(--header-h);
+  display: flex; align-items: flex-start; gap: 24px; padding: 0 var(--edge);
+  padding-top: calc(16px + env(safe-area-inset-top, 0px));   /* верхняя линия: верх логотипа = верх бургера и кнопки */
+  color: var(--paper);
+}
+.site-header > .btn { max-width: 260px; overflow: hidden; transition: opacity .4s var(--ease-out), visibility .4s, max-width .5s var(--ease-out), padding .5s var(--ease-out), margin .5s var(--ease-out), background-color .3s ease, border-color .3s ease; }
+/* на первом экране кнопка не занимает места — меню доходит до правого края */
+.at-start .site-header > .btn, .at-book .site-header > .btn { opacity: 0; visibility: hidden; max-width: 0; padding-left: 0; padding-right: 0; border-width: 0; margin-left: -24px; }
+.brand { display: inline-flex; text-decoration: none; border-radius: 8px; }
+.brand .lockup { --h: 40px; }
+.site-nav { align-self: center; margin-top: -16px; display: flex; gap: clamp(14px, 2vw, 28px); margin-left: auto; }
+.site-nav a { font-size: 16px; text-decoration: none; opacity: .85; transition: opacity .2s; text-shadow: 0 1px 12px rgba(0, 0, 0, .5); }
+.site-nav a:hover, .site-nav a.is-current { opacity: 1; }
+.site-nav a.is-current { text-decoration: underline; text-decoration-color: var(--portal); text-underline-offset: 6px; text-decoration-thickness: 2px; }
+.nav-toggle { display: none; }
+
+@media (max-width: 1080px) {
+  .site-header .btn, .at-start .site-header > .btn, .at-book .site-header > .btn { margin-left: auto; }
+  .nav-open .site-header > .btn { opacity: 0; visibility: hidden; }
+  .nav-toggle {
+    display: grid; place-content: center; gap: 6px; width: 40px; height: 40px;
+    background: transparent; border: 1px solid rgba(233, 236, 238, .35); border-radius: var(--r-btn); cursor: pointer; padding: 0;
+    transition: background .2s;   /* та же рамка, что у «↓» — кнопки читаются как пара на одной оси */
+  }
+  .nav-toggle:hover { background: rgba(233, 236, 238, .1); }
+  .nav-toggle span { display: block; width: 18px; height: 1.5px; background: currentColor; transition: transform .25s; }
+  .nav-open .nav-toggle span:first-child { transform: translateY(3.75px) rotate(45deg); }
+  .nav-open .nav-toggle span:last-child { transform: translateY(-3.75px) rotate(-45deg); }
+  /* меню — стеклянная полоса слева, тем же тоном, что плашки сцен; логотип и бургер остаются поверх */
+  .brand, .nav-toggle { position: relative; z-index: 2; }
+  .site-nav {
+    position: fixed; inset: 0 auto 0 0; z-index: 1; width: min(340px, 86vw); margin: 0; align-self: auto; overflow-y: auto;
+    flex-direction: column; gap: 4px; padding: calc(var(--header-h) + 24px + env(safe-area-inset-top, 0px)) var(--edge) 32px;
+    background: var(--glass);
+    -webkit-backdrop-filter: blur(16px) saturate(1.1); backdrop-filter: blur(16px) saturate(1.1);
+    border-right: 1px solid var(--line);
+    visibility: hidden; transform: translateX(-100%);
+    transition: transform .45s var(--ease-out), visibility .45s;
+  }
+  .site-nav a { font: 400 20px/1.2 var(--f-display); padding: 14px 0; opacity: 1; border-bottom: 1px solid var(--line); text-shadow: none; }
+  .nav-open .site-nav { visibility: visible; transform: none; }
+}
+@media (max-width: 480px) {
+  .brand .lockup { --h: 32px; }
+  .brand .lockup .sl { display: none; }
+  .site-header .btn { padding: 11px 12px; font-size: 11px; letter-spacing: .1em; }
 }
 
-.site-header__inner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  min-height: 4rem;
+/* ==========================================================================
+   Фон: видео с Аркадием, стоп-кадры и фото поверх
+   ========================================================================== */
+.stage { position: fixed; inset: 0; z-index: 0; overflow: hidden; background: var(--night); opacity: 0; transition: opacity 1.2s var(--ease-out); }
+.stage.is-on { opacity: 1; }
+.stage__video, .stage__layer { position: absolute; inset: 0; width: 100%; height: 100%; }
+/* --mx — какая часть кадра видна, когда экран уже кадра (телефон): у каждой сцены своя */
+.stage__video { inset: 0 auto auto 0; max-width: none; object-fit: cover; will-change: transform; transition: transform var(--mx-dur, 0s) var(--ease-out); }   /* размер и сдвиг — scenes.js (placeVideo): transform плавнее object-position */
+.stage__layer { background-size: cover; background-position: var(--mx, 50% 50%); opacity: 0; transition: opacity 1s var(--ease-out), background-position var(--mx-dur, 0s) var(--ease-out); }
+.stage__layer.is-on { opacity: 1; }
+/* фото поверх видео медленно приближается — кадр не выглядит застывшим */
+.stage__layer--bg { transform-origin: var(--mx, 50% 50%); transform: scale(1); transition: opacity 1s var(--ease-out), transform 12s linear; }   /* та же точка кадра, что у видео (--mx) */
+.stage__layer--bg.is-on { transform: scale(1.04); }   /* мягкое приближение — края кадра (библиотека) не срезаются */
+/* градиент под текстом первой сцены: снизу и слева, верх кадра (библиотека, Аркадий) открыт */
+.stage__shade { position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity .8s;
+  background: linear-gradient(0deg, rgba(19, 21, 31, .88) 0%, rgba(19, 21, 31, .55) 30%, rgba(19, 21, 31, 0) 55%), linear-gradient(90deg, rgba(19, 21, 31, .5) 0%, rgba(19, 21, 31, 0) 45%); }
+.stage[data-shade="hero"] .stage__shade { opacity: 1; }
+/* светлые кадры зала слегка приглушаются, сверху чуть сильнее — чтобы читалась шапка */
+.stage__dim { position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity .8s;
+  background: linear-gradient(180deg, rgba(19, 21, 31, .5) 0, rgba(19, 21, 31, .18) 150px, rgba(19, 21, 31, .18) 100%); }
+.stage[data-dim="1"] .stage__dim { opacity: 1; }
+/* след курсора (js/cursor.js) — над видео и затемнениями, под плашками */
+.stage__trail { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; mix-blend-mode: screen; }
+
+/* ==========================================================================
+   Сцены и плашки
+   ========================================================================== */
+.scenes { position: relative; z-index: 1; }
+.scene {
+  min-height: 100vh; min-height: 100svh;
+  display: flex; align-items: center;
+  padding: calc(var(--header-h) + 16px) var(--edge) calc(var(--ui-h) + 8px);
+  padding-left: var(--edge);
+}
+.scene__panel {
+  width: 100%; max-width: 600px; max-height: 100%;
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(16px) saturate(1.1); backdrop-filter: blur(16px) saturate(1.1);
+  border: 1px solid var(--line); border-radius: var(--radius);
+  padding: clamp(24px, 3vw, 40px);
+  overflow-y: auto; overscroll-behavior: contain;
+  scrollbar-width: none;   /* бегунок не показываем: листается колесом и свайпом (на телефоне длинные плашки) */
+}
+.scene__panel::-webkit-scrollbar { display: none; }
+.scene__panel--wide { max-width: none; }   /* от левой оси до правой — край совпадает с бургером и «↓» */
+.scene__panel--narrow { max-width: 440px; }
+/* сцена с плашкой справа — когда слева в кадре Аркадий */
+.scene[data-side="right"] { justify-content: flex-end; padding-left: var(--gutter); padding-right: var(--edge); }
+/* первая сцена: текст внизу, верх кадра — библиотека и Аркадий — открыт */
+.scene--hero { align-items: flex-end; padding-bottom: calc(var(--ui-h) + 32px); }
+.scene--hero h1 { font-size: clamp(38px, 5.2vw, 72px); }
+.scene--hero .lead { max-width: 40ch; }
+.scene__panel--bare { background: none; border: 0; -webkit-backdrop-filter: none; backdrop-filter: none; padding: 0; max-width: 560px; overflow: visible; }
+.scene__panel > h2 + p, .scene__panel .lead { margin-top: 16px; }
+.scene__panel > p:not(.eyebrow):not(.lead) { margin-top: 12px; color: var(--text-soft); }
+
+/* режим сцен: всё на одном экране, видна только текущая сцена */
+.scenes-on .scene { position: fixed; inset: 0; min-height: 0; visibility: hidden; pointer-events: none; }
+.scenes-on .scene.is-active { visibility: visible; pointer-events: auto; }
+.scenes-on .scene.is-leaving { visibility: visible; }
+
+/* появление содержимого блока: подъём + проявление из размытия, по очереди */
+.reveal > * { transition: opacity .7s var(--ease-out), transform .7s var(--ease-out), filter .7s var(--ease-out); }
+.reveal:not(.in) > * { opacity: 0; transform: translateY(22px); filter: blur(6px); }
+.reveal.in > :nth-child(2) { transition-delay: .07s; } .reveal.in > :nth-child(3) { transition-delay: .14s; }
+.reveal.in > :nth-child(4) { transition-delay: .21s; } .reveal.in > :nth-child(5) { transition-delay: .28s; }
+.reveal.in > :nth-child(n+6) { transition-delay: .32s; }
+/* у плашки со стеклом гаснет и сам фон */
+.scene__panel.reveal:not(.scene__panel--bare) { transition: opacity .5s var(--ease-out), transform .5s var(--ease-out); }
+.scene__panel.reveal:not(.scene__panel--bare):not(.in) { opacity: 0; transform: translateY(16px) scale(.99); }
+.scene.is-leaving .reveal > *, .scene.is-leaving .scene__panel { transition-duration: .25s !important; transition-delay: 0s !important; }
+@media (prefers-reduced-motion: reduce) {
+  .reveal > *, .scene__panel.reveal { transition: none !important; opacity: 1 !important; transform: none !important; filter: none !important; }
 }
 
-.logo {
-  font-weight: 700;
-  color: var(--color-text);
-  text-decoration: none;
+.panel-head { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px 32px; margin-bottom: 24px; }
+
+/* --- Цифры --- */
+.facts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-top: 28px; padding-top: 24px; border-top: 1px solid var(--line); }
+.facts b { display: block; font: 400 clamp(24px, 2.6vw, 34px)/1 var(--f-display); letter-spacing: -.02em; white-space: nowrap; }
+.facts span { display: block; margin-top: 8px; font: 500 12px/1.4 var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--text-soft); }
+
+/* --- 3D --- */
+.room3d iframe { width: 100%; height: clamp(300px, calc(100vh - 370px), 620px); height: clamp(300px, calc(100svh - 370px), 620px); border: 0; border-radius: var(--r-btn); background: var(--night-2); }
+/* «на весь экран»: настоящий полноэкранный режим, где его нет (iPhone) — зал поверх всего сайта; свернуть — кнопкой или Esc */
+.room3d { position: relative; }
+.room3d__close { display: none; position: absolute; top: 16px; left: 50%; transform: translateX(-50%); z-index: 2; }   /* по центру сверху — углы заняты интерфейсом 3D */
+.room-full .room3d { position: fixed; inset: 0; z-index: 1; background: var(--night); transform: none !important; filter: none !important; opacity: 1 !important; }
+.room-full .room3d iframe { height: 100%; border-radius: 0; }
+.room-full .room3d__close { display: inline-flex; }
+.room-full .scenes { z-index: 60; }
+.room-full #room .scene__panel { transform: none !important; -webkit-backdrop-filter: none; backdrop-filter: none; }
+
+/* --- Карточки: форматы, тарифы, отзывы --- */
+.cards { display: grid; gap: 14px; }
+.cards--4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.cards--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 24px; }
+.card { position: relative; display: flex; flex-direction: column; gap: 10px; background: var(--glass-card); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px 20px; }
+.card p { color: var(--text-soft); font-size: 15px; }
+.card__meta { margin-top: auto; padding-top: 14px; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 4px; }
+.card__meta span { font: 500 12px/1.4 var(--f-mono); letter-spacing: .08em; text-transform: uppercase; }
+.card__meta b { font: 600 17px/1.3 var(--f-display); color: var(--text); }
+.card ul { display: grid; gap: 6px; margin-top: auto; padding-top: 14px; border-top: 1px solid var(--line); font-size: 14px; color: var(--text-soft); }
+.card li::before { content: "— "; }
+.card--accent { background: var(--paper); color: var(--graphite); border-color: var(--paper); }
+.card--accent p, .card--accent ul { color: #56666E; }
+.card--accent ul { border-color: rgba(32, 54, 65, .15); }
+.card__badge { position: absolute; top: 0; left: 20px; background: var(--portal); color: var(--night) !important; font: 500 11px/1 var(--f-mono) !important; letter-spacing: .08em; text-transform: uppercase; padding: 6px 8px; border-radius: 0 0 var(--r-badge) var(--r-badge); }
+.price b { font: 400 38px/1 var(--f-display); letter-spacing: -.02em; color: var(--text); }
+.card--accent .price b { color: var(--graphite); }
+.extras { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px 24px; margin-top: 20px; font-size: 14px; }
+/* тарифы: снизу отступ меньше, ярлык «Чаще всего берут» внутри карточки — при прокрутке не обрезается */
+.scene__panel--tariffs { padding-bottom: clamp(16px, 2vw, 24px); }
+.scene__panel--tariffs .card { padding-top: 40px; }
+.extras li { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); color: var(--text-soft); }
+.extras b { color: var(--text); font-family: var(--f-display); font-weight: 600; white-space: nowrap; }
+.review { justify-content: space-between; gap: 20px; }
+/* цитаты и подписи — общими рядами сетки: имена встают на одну линию, даже если цитаты и подписи разной длины */
+@supports (grid-template-rows: subgrid) {
+  .review { display: grid; grid-row: span 2; grid-template-rows: subgrid; row-gap: 20px; align-content: start; }
+}
+.review blockquote { font-size: 17px; line-height: 1.55; }
+.review blockquote::before { content: "«"; } .review blockquote::after { content: "»"; }
+.review figcaption b { display: block; font-family: var(--f-display); font-weight: 600; }
+.review figcaption span { font-size: 14px; color: var(--text-soft); }
+
+/* --- Галерея --- */
+.gallery__track { position: relative; height: clamp(240px, 34svh, 420px); touch-action: pan-y; cursor: pointer; user-select: none; -webkit-user-select: none; }
+.gallery__track canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.gallery__track:not(.is-canvas) { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; }
+.gallery__track:not(.is-canvas) img { height: 100%; width: auto; aspect-ratio: 4 / 3; object-fit: cover; scroll-snap-align: center; border-radius: var(--r-badge); }
+.gallery__track.is-canvas img { display: none; }
+.gallery__meta { display: flex; justify-content: space-between; gap: 16px; padding-top: 14px; margin-top: 12px; border-top: 1px solid var(--line); font: 500 13px/1.4 var(--f-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--text-soft); }
+.gallery__cap { color: var(--text); transition: opacity .35s; }
+
+/* --- Контакты --- */
+.scene__panel--contacts { max-width: 400px; padding: 22px 28px; }   /* слева и узко — Аркадий и здание открыты */
+
+.scene__panel--contacts h2 { font-size: clamp(24px, 2.4vw, 32px); }
+.contact-list { margin-top: 14px; display: grid; grid-template-columns: minmax(0, 1fr); border-top: 1px solid var(--line); }
+.contact-list li { display: grid; gap: 2px; padding: 7px 0; border-bottom: 1px solid var(--line); font-size: 15px; }
+.contact-list span { font: 500 12px/1.7 var(--f-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--text-soft); }
+.contact-list time { white-space: nowrap; }
+.contact-list a { text-decoration-color: rgba(127, 211, 255, .5); text-underline-offset: 3px; }
+/* невысокий экран (ноутбук): подпись и значение контакта в одну строку — плашка влезает без прокрутки */
+@media (min-width: 721px) and (max-height: 860px) {
+  .contact-list li { grid-template-columns: auto 1fr; align-items: baseline; gap: 16px; }
+  .contact-list li > :last-child, .contact-list li { text-align: right; }
+  .contact-list span { text-align: left; }
+  .scene__panel--contacts h2 { font-size: 26px; }
+  .scene__panel--contacts .book-form { margin-top: 14px; }
+}
+/* совсем невысокое окно (ноутбук минус панели браузера, ~650px): плашка контактов плотнее */
+@media (min-width: 721px) and (max-height: 720px) {
+  #contacts { padding-top: calc(var(--header-h) + 4px); }
+  .scene__panel--contacts { padding: 18px 24px; }
+  .scene__panel--contacts h2 { font-size: 24px; }
+  .contact-list { margin-top: 10px; }
+  .contact-list li { padding: 4px 0; }
+  .scene__panel--contacts .book-form { margin-top: 10px; padding: 14px; gap: 10px; }
+}
+.contact-actions { display: none; }
+.book-form { display: grid; gap: 14px; background: var(--glass-card); border: 1px solid rgba(127, 211, 255, .2); border-radius: var(--radius); padding: 18px; margin-top: 18px; gap: 12px; }
+.book-form h3 { font-size: 18px; }
+.book-form label { display: grid; gap: 6px; font-size: 14px; color: var(--text-soft); }
+.book-form input { width: 100%; min-width: 0; background: rgba(19, 21, 31, .7); border: 1px solid var(--line); border-radius: var(--r-btn); padding: 10px 12px; color: var(--text); color-scheme: dark; }
+.book-form input:focus { outline: none; border-color: var(--portal); box-shadow: 0 0 0 3px rgba(127, 211, 255, .2); }
+.book-form__row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+.book-form__row--submit { align-items: end; }
+.book-form__row--submit .btn { padding-block: 13px; padding-inline: 16px; }
+.form-done { color: var(--portal); outline: none; }
+.book-form.is-sent label, .book-form.is-sent .btn, .book-form.is-sent .book-form__row { display: none; }
+/* Футер — последний шаг: визитка с колонками (знак и описание, «Зал», «Аренда», «Контакты»), внизу © и часы */
+.scene--footer { align-items: flex-end; }
+.scenes-on .scene--footer { padding-bottom: var(--edge); }
+.site-footer { color: var(--text-soft); font-size: 15px; }
+.site-footer a { text-decoration: none; transition: color .2s; }
+.site-footer a:hover { color: var(--portal); }
+.site-footer__cols { display: grid; grid-template-columns: 1.5fr 1fr 1fr 1.2fr; gap: 28px 40px; }
+.site-footer__logo { display: inline-flex; color: var(--paper); }
+.site-footer__logo .lockup { --h: 52px; }
+.site-footer__brand p { margin-top: 18px; max-width: 30ch; }
+.site-footer__bottom .site-footer__cta { margin-left: auto; }   /* кнопка — в нижней строке справа, после © и часов */
+.site-footer a.btn:hover { color: var(--night); }
+.site-footer__col { display: grid; align-content: start; gap: 10px; }
+.site-footer__lbl { font: 500 12px/1 var(--f-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+.site-footer__strong { color: var(--text); }
+.site-footer__bottom {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 32px;
+  margin-top: 32px; padding-top: 18px; border-top: 1px solid var(--line);
+  font: 500 12px/1.4 var(--f-mono); letter-spacing: .1em; text-transform: uppercase;
+}
+/* на футере счётчик сцен не нужен — внизу и так последний экран */
+.scenes-on.at-end .scene-ui { opacity: 0; visibility: hidden; }
+@media (max-width: 860px) {
+  /* знак сверху, «Зал», «Аренда», «Контакты» — тремя колонками, описание прячем (оно есть выше): футер влезает в экран */
+  .site-footer__cols { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px 24px; }
+  .site-footer__brand { grid-column: 1 / -1; }
+  .site-footer__brand p { display: none; }
+  .site-footer__logo .lockup { --h: 44px; }
+  .site-footer__bottom { margin-top: 22px; padding-top: 14px; }
+  .site-footer__bottom .site-footer__cta { order: -1; flex-basis: 100%; margin-left: 0; }   /* узко: кнопка на всю ширину над © */
+}
+@media (max-width: 560px) {
+  .site-footer__cols { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 22px 20px; }
+  .site-footer__cols > :last-child { grid-column: 1 / -1; }
+  .site-footer__col { gap: 8px; }
 }
 
-.nav {
-  display: flex;
-  gap: var(--space-4);
-}
 
-.nav a {
-  color: var(--color-muted);
-  text-decoration: none;
+/* ==========================================================================
+   Счётчик сцен и кнопка «дальше» — как в референсе: 01 ———
+   ========================================================================== */
+.scene-ui, .scene-next { display: none; }
+.scenes-on .scene-ui {
+  display: flex; align-items: flex-end; position: fixed; z-index: 40; left: var(--edge); bottom: 16px; height: 40px;   /* нижняя линия: низ строки счётчика = низ «↓» */
+  font: 500 13px/1 var(--f-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--text-soft);
+  transition: opacity .4s;
 }
-
-.nav a:hover {
-  color: var(--color-text);
+.scene-counter { display: flex; align-items: center; gap: 12px; }
+.scene-counter__bar { width: 120px; height: 1px; background: rgba(233, 236, 238, .25); position: relative; }
+.scene-counter__bar i { position: absolute; left: 0; top: -1px; height: 3px; width: 0; background: var(--portal); transition: width 1s var(--ease-out); }
+.scenes-on .scene-next {
+  display: grid; place-items: center; position: fixed; z-index: 40; right: var(--edge); bottom: 16px;
+  width: 40px; height: 40px; border-radius: var(--r-btn); cursor: pointer;
+  background: transparent; color: var(--paper); border: 1px solid rgba(233, 236, 238, .35); font-size: 18px;
+  transition: background .2s, opacity .3s;
 }
+.scene-next:hover { background: rgba(233, 236, 238, .1); }
+.scene-next[hidden] { display: none; }
+.is-loading .scene-ui, .is-loading .scene-next { opacity: 0; }
 
-.hero {
-  padding-block: var(--space-6);
+/* ==========================================================================
+   Адаптив
+   ========================================================================== */
+@media (max-width: 1080px) {
+  .cards--4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .extras { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
-
-.lead {
-  max-width: 40rem;
-  margin-block: var(--space-3) var(--space-4);
-  font-size: 1.25rem;
-  color: var(--color-muted);
+@media (max-width: 860px) {
+  .cards--3 { grid-template-columns: minmax(0, 1fr); }
+  .facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
-
-.button {
-  display: inline-block;
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius);
-  background: var(--color-accent);
-  color: var(--color-accent-contrast);
-  font-weight: 600;
-  text-decoration: none;
+@media (max-width: 720px) {
+  /* «Контакты» на телефоне: форма свёрнута за кнопкой, высота плашки ограничена — лицо Аркадия (верхняя треть кадра) открыто */
+  .contact-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+  .contact-actions[hidden] { display: none; }
+  .contact-actions .btn { flex: 1 1 auto; padding: 15px 10px; font-size: 12px; letter-spacing: .08em; }   /* обе кнопки в одну строку — плашка ниже, рамка «Позвонить» не уходит под край */
+  .book-form:not(.is-open) { display: none; }
+  .scene__panel--contacts { max-height: calc(100svh - 330px); }
+  .contact-list { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0 20px; }   /* на телефоне лист на всю ширину — контакты в две колонки, короче */
+  :root { --ui-h: 56px; --radius: 8px; }
+  .stage__shade { background: linear-gradient(180deg, rgba(19, 21, 31, 0) 40%, rgba(19, 21, 31, .92) 68%); }
+  .scene[data-side="right"] { padding-left: var(--edge); padding-right: var(--edge); }
+  /* на телефоне плашка — нижний лист, сверху видно фон */
+  .scene { align-items: flex-end; padding-left: var(--edge); padding-right: var(--edge); padding-top: calc(var(--header-h) + 40px); }
+  .scene--hero { padding-left: var(--edge); padding-right: var(--edge); }
+  .scene__panel { padding: 22px 18px; }
+  .scene__panel--bare { padding: 0; }
+  .scenes-on .scene-ui { left: var(--edge); bottom: 12px; }
+  .scene-counter__bar { width: 64px; }
+  .scenes-on .scene-next { bottom: 12px; }
 }
-
-.button:hover {
-  filter: brightness(1.1);
+/* низкий телефон: «Контакты» плотнее, чтобы влезли без прокрутки */
+@media (max-width: 720px) and (max-height: 760px) {
+  .scene__panel--contacts { padding-top: 18px; padding-bottom: 18px; max-height: calc(100svh - 314px); }
+  .scene__panel--contacts h2 { font-size: 24px; }
+  .contact-list { margin-top: 10px; }
+  .contact-list li { padding: 4px 0; }
+  .contact-actions { margin-top: 12px; }
 }
-
-.site-footer {
-  padding-block: var(--space-5);
-  border-top: 1px solid var(--color-border);
-  color: var(--color-muted);
-  font-size: 0.875rem;
+@media (max-width: 560px) {
+  /* мелкий текст карточек на телефоне на 1px крупнее */
+  .card p { font-size: 16px; }
+  .card ul, .extras { font-size: 15px; }
+  .cards--4, .extras { grid-template-columns: minmax(0, 1fr); }
+  .book-form__row { grid-template-columns: minmax(0, 1fr); }
+  .room3d iframe { height: clamp(260px, calc(100svh - 360px), 520px); }
+  /* на телефоне верх 3D занят видами — «Свернуть» на полосе над залом */
+  .room-full .room3d { padding-top: 60px; }
+  .room-full .room3d iframe { height: 100%; }
+  .room3d__close { top: 10px; }
 }

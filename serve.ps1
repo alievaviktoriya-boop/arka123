@@ -35,9 +35,28 @@ try {
           $ext = [IO.Path]::GetExtension($path).ToLower()
           $res.ContentType = if ($mime.ContainsKey($ext)) { $mime[$ext] } else { "application/octet-stream" }
           $res.Headers.Add("Cache-Control", "no-store")
+          $res.Headers.Add("Accept-Ranges", "bytes")
           $bytes = [IO.File]::ReadAllBytes($path)
-          $res.ContentLength64 = $bytes.Length
-          $res.OutputStream.Write($bytes, 0, $bytes.Length)
+          # Запросы диапазона (Range) нужны браузеру для перемотки видео
+          $range = $ctx.Request.Headers["Range"]
+          if ($range -match '^bytes=(\d*)-(\d*)$') {
+            $len = $bytes.Length
+            if ($Matches[1] -eq '') { $start = [Math]::Max(0, $len - [long]$Matches[2]); $end = $len - 1 }
+            else { $start = [long]$Matches[1]; $end = if ($Matches[2] -eq '') { $len - 1 } else { [Math]::Min([long]$Matches[2], $len - 1) } }
+            if ($start -ge $len) {
+              $res.StatusCode = 416
+              $res.Headers.Add("Content-Range", "bytes */$len")
+            } else {
+              $res.StatusCode = 206
+              $res.Headers.Add("Content-Range", "bytes $start-$end/$len")
+              $count = [int]($end - $start + 1)
+              $res.ContentLength64 = $count
+              $res.OutputStream.Write($bytes, [int]$start, $count)
+            }
+          } else {
+            $res.ContentLength64 = $bytes.Length
+            $res.OutputStream.Write($bytes, 0, $bytes.Length)
+          }
         } else {
           $res.StatusCode = 404
           $notFound = Join-Path $root "404.html"
@@ -50,10 +69,12 @@ try {
       }
       Write-Host ("{0} {1} {2}" -f $res.StatusCode, $ctx.Request.HttpMethod, $ctx.Request.Url.AbsolutePath)
     } catch {
-      $res.StatusCode = 500
+      # браузер оборвал загрузку (перемотка видео) — заголовки уже ушли, код ответа не поменять;
+      # ошибка не должна останавливать сервер
+      try { $res.StatusCode = 500 } catch {}
       Write-Host "500 $($_.Exception.Message)"
     } finally {
-      $res.Close()
+      try { $res.Close() } catch {}
     }
   }
 } finally {

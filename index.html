@@ -1,55 +1,330 @@
 <!doctype html>
-<html lang="ru">
+<html lang="ru" class="is-loading">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Мой сайт</title>
-  <meta name="description" content="Описание сайта для поисковиков и превью ссылок.">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>АРКА&nbsp;123&nbsp;— зал для&nbsp;мастер-классов напротив Национальной библиотеки</title>
+  <meta name="description" content="Аренда зала 123 м² для мастер-классов, лекций и семинаров в Минске. Арочные окна с видом на Национальную библиотеку, потолки 4,5 м, проектор. Мстиславца, 10.">
+  <meta name="theme-color" content="#13151F">
+  <meta property="og:title" content="АРКА 123 — встречаемся напротив библиотеки">
+  <meta property="og:description" content="Зал 123 м² для мастер-классов и семинаров с видом на Национальную библиотеку.">
+  <meta property="og:image" content="assets/img/place/hall-wide.jpg">
   <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600&family=Geist:wght@400;500&family=Geist+Mono:wght@400;500&display=swap">
   <link rel="stylesheet" href="css/style.css">
+  <script src="js/logo.js" defer></script>
+  <script src="js/scenes.js" defer></script>
+  <script src="js/gallery.js" defer></script>
   <script src="js/main.js" defer></script>
+  <script src="js/cursor.js" defer></script>
 </head>
 <body>
-  <a class="skip-link" href="#main">Перейти к содержимому</a>
+  <!-- Прелоадер: анимация логотипа (задание 1) -->
+  <div class="loader" id="loader" role="status" aria-label="Загрузка">
+    <div class="lockup" data-logo data-logo-portal></div>
+    <div class="loader__count" aria-hidden="true">000&nbsp;%</div>
+  </div>
+  <noscript><style>.loader{display:none}.reveal>*,.reveal-self{opacity:1!important;transform:none!important;filter:none!important}</style></noscript>
+
+  <a class="skip-link" href="#main">Перейти к&nbsp;содержимому</a>
 
   <header class="site-header">
-    <div class="container site-header__inner">
-      <a class="logo" href="./">Мой сайт</a>
-      <nav class="nav" aria-label="Основная навигация">
-        <a href="#about">О проекте</a>
-        <a href="#contact">Контакты</a>
-      </nav>
-    </div>
+    <a class="brand" href="#top" aria-label="АРКА 123, в начало">
+      <span class="lockup" data-logo data-logo-hover></span>
+    </a>
+    <nav class="site-nav" id="site-nav" aria-label="Основная навигация">
+      <a href="#top">Главная</a>
+      <a href="#about">О&nbsp;зале</a>
+      <a href="#room">Помещение</a>
+      <a href="#formats">Форматы</a>
+      <a href="#gallery">Галерея</a>
+      <a href="#tariffs">Тарифы</a>
+      <a href="#reviews">Отзывы</a>
+      <a href="#contacts">Контакты</a>
+    </nav>
+    <a class="btn btn--small" href="#contacts">Забронировать</a>
+    <button class="nav-toggle" type="button" aria-controls="site-nav" aria-expanded="false" aria-label="Меню">
+      <span></span><span></span>
+    </button>
   </header>
 
-  <main id="main">
-    <section class="hero">
-      <div class="container">
-        <h1>Заголовок первого экрана</h1>
-        <p class="lead">Короткий подзаголовок, который объясняет, о чём сайт.</p>
-        <a class="button" href="#contact">Связаться</a>
+  <!-- Фон всего сайта: видео с Аркадием (задание 4, сделано в Kling).
+       0 с — Аркадий на променаде у библиотеки → окно фасада разгорается порталом →
+       вспышка → Аркадий в зале → камера поворачивает к окнам. 10 с. -->
+  <div class="stage" data-video="assets/video/arkadiy.mp4" aria-hidden="true">
+    <div class="stage__shade"></div>
+    <div class="stage__dim"></div>
+  </div>
+
+  <!-- Сцены. data-t — секунда видео, где сцена стоит на паузе;
+       data-still — стоп-кадр этой секунды (пока видео грузится, без видео, «меньше движения»);
+       data-bg — фото поверх видео (для сцен после конца ролика);
+       data-side — сторона плашки; data-mx — какая часть кадра видна на телефоне (object-position по X);
+       data-dur — длительность перехода в сцену; data-dim — приглушить светлый кадр. -->
+  <main id="main" class="scenes">
+
+    <section class="scene scene--hero" id="top" data-t="0" data-still="assets/img/stills/t-0.jpg" data-mx="50" data-mx-wide="25" data-name="Встреча">
+      <div class="scene__panel scene__panel--bare reveal">
+        <p class="eyebrow eyebrow--portal">Зал для&nbsp;мастер-классов · Минск</p>
+        <h1>Встречаемся напротив библиотеки</h1>
+        <p class="lead">123&nbsp;м² света, огромные арочные окна и&nbsp;вид на&nbsp;Национальную библиотеку. Листайте&nbsp;— Аркадий откроет вам дверь.</p>
+        <div class="actions">
+          <a class="btn" href="#contacts">Забронировать зал</a>
+          <a class="btn btn--ghost" href="#room">Зал в&nbsp;3D</a>
+        </div>
       </div>
     </section>
 
-    <section id="about" class="section">
-      <div class="container">
-        <h2>О проекте</h2>
-        <p>Здесь будет основной контент.</p>
+    <section class="scene" id="portal" data-t="2.15" data-still="assets/img/stills/t-2.15.jpg" data-mx="66" data-dur="2.2" data-name="Портал">
+      <div class="scene__panel scene__panel--narrow reveal">
+        <p class="eyebrow eyebrow--portal">Хранитель порталов</p>
+        <h2>Одна арка&nbsp;— и&nbsp;вы уже в&nbsp;зале</h2>
+        <p class="lead">Аркадий открывает двери туда, где встречаются мастера. Его портал&nbsp;— наше арочное окно 4&nbsp;×&nbsp;3&nbsp;метра.</p>
       </div>
     </section>
 
-    <section id="contact" class="section section--alt">
-      <div class="container">
-        <h2>Контакты</h2>
-        <p>Как с вами связаться.</p>
+    <!-- Фирменный герой на сайте — проводник по залу. Описание идеи персонажа (задание 2) — в материалах к сдаче -->
+    <section class="scene" id="arkadiy" data-t="5.04" data-still="assets/img/stills/t-5.04.jpg" data-mx="12" data-side="right" data-dur="2.2" data-dim data-name="Аркадий">
+      <div class="scene__panel scene__panel--narrow reveal">
+        <p class="eyebrow eyebrow--portal">Ваш проводник</p>
+        <h2>Аркадий встретит вас у&nbsp;входа</h2>
+        <p class="lead">Покажет зал, поможет с&nbsp;расстановкой и&nbsp;проектором&nbsp;— вам останется только начать.</p>
       </div>
+    </section>
+
+    <section class="scene" id="about" data-t="9.9" data-still="assets/img/stills/t-9.9.jpg" data-mx="60" data-dur="2.6" data-dim data-name="О зале">
+      <div class="scene__panel reveal">
+        <p class="eyebrow">Об&nbsp;АРКА&nbsp;123</p>
+        <h2>Светлый зал, в&nbsp;котором хочется учиться</h2>
+        <p class="lead">Пространство для&nbsp;мастер-классов, лекций, тренингов и&nbsp;стратегических сессий на&nbsp;первой линии у&nbsp;Национальной библиотеки.</p>
+        <p>Название&nbsp;— это и&nbsp;есть адрес: здание из&nbsp;двух высоких домов соединено аркой, а&nbsp;через неё с&nbsp;променада открывается вид на&nbsp;библиотеку. Цифры 123&nbsp;— площадь зала в&nbsp;квадратных метрах.</p>
+        <ul class="facts" aria-label="Цифры о зале">
+          <li><b>123&nbsp;м²</b><span>без&nbsp;перегородок</span></li>
+          <li><b>4,5&nbsp;м</b><span>потолки</span></li>
+          <li><b>4&nbsp;×&nbsp;3&nbsp;м</b><span>арочные окна</span></li>
+          <li><b>до&nbsp;85</b><span>гостей</span></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Наше помещение: 3D (задание 3) -->
+    <section class="scene" id="room" data-t="10" data-dur="1" data-dim data-name="Помещение">
+      <div class="scene__panel scene__panel--wide reveal">
+        <div class="panel-head">
+          <div>
+            <p class="eyebrow">Наше помещение</p>
+            <h2>Покрутите зал и&nbsp;выберите расстановку</h2>
+          </div>
+          <a class="link-mono" href="room3d/index.html" target="_blank" rel="noopener" data-room-full>Открыть на&nbsp;весь экран ↗</a>
+        </div>
+        <div class="room3d">
+          <iframe data-room3d="room3d/index.html" title="Зал АРКА 123 в 3D: пустой, мастер-класс, большой стол, отдельные столы" allowfullscreen></iframe>
+          <button class="btn btn--small room3d__close" type="button" data-room-close>Свернуть ✕</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Наши услуги и цены -->
+    <section class="scene" id="formats" data-t="10" data-bg="assets/img/hall/07.jpg" data-dim data-name="Форматы">
+      <div class="scene__panel scene__panel--wide reveal">
+        <div class="panel-head">
+          <div>
+            <p class="eyebrow">Наши услуги и&nbsp;цены</p>
+            <h2>Под&nbsp;любой формат</h2>
+          </div>
+          <p class="hint">Мебель расставим заранее&nbsp;— вы приходите, когда всё готово.</p>
+        </div>
+        <ul class="cards cards--4">
+          <li class="card">
+            <h3>Мастер-класс и&nbsp;лекция</h3>
+            <p>Ряды стульев, экран и&nbsp;проектор у&nbsp;глухой стены&nbsp;— свет из&nbsp;окон не&nbsp;засвечивает слайды.</p>
+            <p class="card__meta"><span>до&nbsp;85&nbsp;гостей</span><b>от&nbsp;70&nbsp;BYN / час</b></p>
+          </li>
+          <li class="card">
+            <h3>Воркшоп</h3>
+            <p>Шесть столов по&nbsp;шесть мест, флипчарт в&nbsp;центре зала для&nbsp;ведущего.</p>
+            <p class="card__meta"><span>до&nbsp;36&nbsp;гостей</span><b>от&nbsp;70&nbsp;BYN / час</b></p>
+          </li>
+          <li class="card">
+            <h3>Стратегическая сессия</h3>
+            <p>Один стол 7,4&nbsp;м вдоль окон, вода и&nbsp;блокноты на&nbsp;каждом месте.</p>
+            <p class="card__meta"><span>до&nbsp;22&nbsp;гостей</span><b>от&nbsp;80&nbsp;BYN / час</b></p>
+          </li>
+          <li class="card">
+            <h3>Фото- и&nbsp;видеосъёмка</h3>
+            <p>Мягкий дневной свет из&nbsp;арочных окон и&nbsp;паркет «ёлочкой» в&nbsp;кадре.</p>
+            <p class="card__meta"><span>пустой зал</span><b>от&nbsp;60&nbsp;BYN / час</b></p>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Фотогалерея -->
+    <section class="scene" id="gallery" data-t="10" data-bg="assets/img/hall/04.jpg" data-dim data-name="Галерея">
+      <div class="scene__panel scene__panel--wide reveal">
+        <div class="panel-head">
+          <div>
+            <p class="eyebrow">Фотогалерея</p>
+            <h2>Зал без&nbsp;фильтров</h2>
+          </div>
+          <p class="hint">Наведите курсор к&nbsp;краю ленты или нажмите на&nbsp;фото. На&nbsp;телефоне&nbsp;— свайп по&nbsp;ленте.</p>
+        </div>
+        <div class="gallery">
+          <div class="gallery__track" id="gallery-track" tabindex="0" aria-label="Фотографии зала: листайте стрелками влево и вправо">
+            <img src="assets/img/hall/01.jpg" alt="Вид на Национальную библиотеку" loading="lazy">
+            <img src="assets/img/hall/02.jpg" alt="Потолки 4,5 метра" loading="lazy">
+            <img src="assets/img/hall/03.jpg" alt="33 светильника" loading="lazy">
+            <img src="assets/img/hall/04.jpg" alt="Два арочных окна" loading="lazy">
+            <img src="assets/img/hall/05.jpg" alt="Окна 4 × 3 метра" loading="lazy">
+            <img src="assets/img/hall/06.jpg" alt="Сервисная ниша" loading="lazy">
+            <img src="assets/img/hall/07.jpg" alt="123 м² без перегородок" loading="lazy">
+            <img src="assets/img/hall/08.jpg" alt="Много дневного света" loading="lazy">
+            <img src="assets/img/hall/09.jpg" alt="Стеклянная стена" loading="lazy">
+            <img src="assets/img/hall/10.jpg" alt="Вход из холла" loading="lazy">
+            <img src="assets/img/hall/11.jpg" alt="Коридор этажа" loading="lazy">
+          </div>
+          <div class="gallery__meta"><span class="gallery__cap" id="gallery-cap">Вид на&nbsp;Национальную библиотеку</span><span id="gallery-num">01&nbsp;/ 11</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Тарифы и услуги -->
+    <section class="scene" id="tariffs" data-t="10" data-bg="assets/img/hall/03.jpg" data-dim data-name="Тарифы">
+      <div class="scene__panel scene__panel--wide scene__panel--tariffs reveal">
+        <div class="panel-head">
+          <div>
+            <p class="eyebrow">Тарифы и&nbsp;услуги</p>
+            <h2>Платите только за&nbsp;своё время</h2>
+          </div>
+          <p class="hint">Во&nbsp;все тарифы входят проектор с&nbsp;экраном, флипчарт, Wi-Fi, мебель и&nbsp;кулер с&nbsp;водой.</p>
+        </div>
+        <div class="cards cards--4">
+          <article class="card">
+            <h3>Почасовой</h3>
+            <p class="price"><b>70</b> BYN / час</p>
+            <ul><li>Минимум 2&nbsp;часа</li><li>Будни и&nbsp;выходные</li></ul>
+          </article>
+          <article class="card card--accent">
+            <p class="card__badge">Чаще всего берут</p>
+            <h3>Полдня</h3>
+            <p class="price"><b>250</b> BYN / 4&nbsp;часа</p>
+            <ul><li>9:00–13:00&nbsp;или 14:00–18:00</li><li>30&nbsp;минут на&nbsp;подготовку бесплатно</li></ul>
+          </article>
+          <article class="card">
+            <h3>Весь день</h3>
+            <p class="price"><b>450</b> BYN / 9&nbsp;часов</p>
+            <ul><li>С&nbsp;9:00&nbsp;до&nbsp;18:00</li><li>Смена расстановки в&nbsp;перерыве</li></ul>
+          </article>
+          <article class="card">
+            <h3>Регулярный</h3>
+            <p class="price"><b>−15%</b> от&nbsp;тарифа</p>
+            <ul><li>От&nbsp;4&nbsp;мероприятий в&nbsp;месяц</li><li>Хранение реквизита</li></ul>
+          </article>
+        </div>
+        <ul class="extras" aria-label="Дополнительные услуги">
+          <li><span>Кофе-брейк</span><b>от&nbsp;12&nbsp;BYN / гость</b></li>
+          <li><span>Микрофоны и&nbsp;акустика</span><b>30&nbsp;BYN</b></li>
+          <li><span>Онлайн-трансляция</span><b>80&nbsp;BYN</b></li>
+          <li><span>Фотограф</span><b>от&nbsp;150&nbsp;BYN</b></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Отзывы -->
+    <section class="scene" id="reviews" data-t="10" data-bg="assets/img/hall/05.jpg" data-dim data-name="Отзывы">
+      <div class="scene__panel scene__panel--wide reveal">
+        <p class="eyebrow">Отзывы</p>
+        <h2>Нас выбирают мастера</h2>
+        <div class="cards cards--3">
+          <figure class="card review">
+            <blockquote>Проводила курс по&nbsp;акварели: свет из&nbsp;окон такой, что лампы не&nbsp;включали до&nbsp;вечера. Ученики первым делом фотографировали библиотеку.</blockquote>
+            <figcaption><b>Ольга</b><span>мастер-класс по&nbsp;акварели, 18&nbsp;человек</span></figcaption>
+          </figure>
+          <figure class="card review">
+            <blockquote>Стратегическая сессия на&nbsp;20&nbsp;человек за&nbsp;одним столом. Проектор не&nbsp;пришлось подстраивать&nbsp;— всё уже стояло.</blockquote>
+            <figcaption><b>Дмитрий</b><span>руководитель отдела, IT-компания</span></figcaption>
+          </figure>
+          <figure class="card review">
+            <blockquote>Лекция на&nbsp;70&nbsp;гостей&nbsp;— и&nbsp;не&nbsp;душно: потолки высокие. Место легко объяснить: «напротив библиотеки»&nbsp;— и&nbsp;все нашли.</blockquote>
+            <figcaption><b>Анна</b><span>организатор лекториев</span></figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- Контакты и бронирование: финал снова у библиотеки — плашка справа, Аркадий и библиотека открыты -->
+    <section class="scene" id="contacts" data-t="10" data-bg="assets/img/place/promenade-evening.jpg" data-mx-wide="25" data-name="Контакты">
+      <div class="scene__panel scene__panel--contacts reveal">
+        <p class="eyebrow eyebrow--portal">Контакты</p>
+        <h2>Встречаемся напротив библиотеки</h2>
+        <ul class="contact-list">
+          <li><span>Адрес</span><a href="https://yandex.by/maps/?text=%D0%9C%D0%B8%D0%BD%D1%81%D0%BA%2C%20%D0%9C%D1%81%D1%82%D0%B8%D1%81%D0%BB%D0%B0%D0%B2%D1%86%D0%B0%2C%2010" target="_blank" rel="noopener">Минск, ул.&nbsp;Мстиславца,&nbsp;10</a></li>
+          <li><span>Телефон</span><a href="tel:+375290000123">+375&nbsp;29&nbsp;000-01-23</a></li>
+          <li><span>Почта</span><a href="mailto:hello@arka123.by">hello@arka123.by</a></li>
+          <li><span>Часы</span><div>Ежедневно <time>8:00–22:00</time></div></li>
+        </ul>
+        <!-- на телефоне форма свёрнута за кнопкой, чтобы плашка не закрывала лицо Аркадия -->
+        <div class="contact-actions">
+          <button class="btn book-toggle" type="button" aria-expanded="false" aria-controls="book-form">Оставить заявку</button>
+          <a class="btn btn--ghost" href="tel:+375290000123">Позвонить</a>
+        </div>
+        <form class="book-form" id="book-form" novalidate>
+          <h3 class="visually-hidden">Заявка на&nbsp;бронирование</h3>
+          <div class="book-form__row">
+            <label>Имя<input name="name" autocomplete="name" required></label>
+            <label>Телефон<input name="phone" type="tel" autocomplete="tel" required placeholder="+375"></label>
+          </div>
+          <div class="book-form__row book-form__row--submit">
+            <label>Дата<input name="date" type="date" required></label>
+            <button class="btn" type="submit">Забронировать</button>
+          </div>
+          <p class="form-done" hidden tabindex="-1">Спасибо! Аркадий уже открывает портал&nbsp;— перезвоним в&nbsp;течение часа.</p>
+        </form>
+      </div>
+    </section>
+
+    <!-- Футер (бриф: хедер / футер) — последний шаг после «Контактов»: тот же вечерний кадр, снизу визитка с колонками -->
+    <section class="scene scene--footer" id="footer" data-t="10" data-bg="assets/img/place/promenade-evening.jpg" data-mx-wide="25" data-dur=".8" data-name="Футер">
+      <footer class="scene__panel scene__panel--wide site-footer reveal">
+        <div class="site-footer__cols">
+          <div class="site-footer__brand">
+            <a class="site-footer__logo" href="#top" aria-label="АРКА 123, в начало"><span class="lockup" data-logo></span></a>
+            <p>Зал 123&nbsp;м² с&nbsp;арочными окнами для&nbsp;мастер-классов, лекций и&nbsp;семинаров</p>
+          </div>
+          <nav class="site-footer__col" aria-label="Зал">
+            <p class="site-footer__lbl">Зал</p>
+            <a href="#about">О&nbsp;зале</a>
+            <a href="#room">Помещение в&nbsp;3D</a>
+            <a href="#gallery">Галерея</a>
+          </nav>
+          <nav class="site-footer__col" aria-label="Аренда">
+            <p class="site-footer__lbl">Аренда</p>
+            <a href="#formats">Форматы</a>
+            <a href="#tariffs">Тарифы</a>
+            <a href="#reviews">Отзывы</a>
+          </nav>
+          <div class="site-footer__col">
+            <p class="site-footer__lbl">Контакты</p>
+            <a class="site-footer__strong" href="tel:+375290000123">+375&nbsp;29&nbsp;000-01-23</a>
+            <a href="mailto:hello@arka123.by">hello@arka123.by</a>
+            <a href="https://yandex.by/maps/?text=%D0%9C%D0%B8%D0%BD%D1%81%D0%BA%2C%20%D0%9C%D1%81%D1%82%D0%B8%D1%81%D0%BB%D0%B0%D0%B2%D1%86%D0%B0%2C%2010" target="_blank" rel="noopener">Минск, ул.&nbsp;Мстиславца,&nbsp;10</a>
+          </div>
+        </div>
+        <div class="site-footer__bottom">
+          <span>&copy; <span data-year></span> АРКА&nbsp;123</span>
+          <span>Ежедневно <time>8:00–22:00</time></span>
+          <a class="btn site-footer__cta" href="#contacts">Забронировать зал</a>
+        </div>
+      </footer>
     </section>
   </main>
 
-  <footer class="site-footer">
-    <div class="container">
-      <p>&copy; <span data-year></span> Мой сайт</p>
-    </div>
-  </footer>
+  <!-- Счётчик сцен и кнопка «дальше» — общие для всех сцен -->
+  <div class="scene-ui" aria-hidden="true">
+    <div class="scene-counter"><span id="scene-num">01</span><span class="scene-counter__bar"><i id="scene-bar"></i></span><span id="scene-name">Встреча</span></div>
+  </div>
+  <button class="scene-next" type="button" aria-label="Следующий раздел">↓</button>
 </body>
 </html>
