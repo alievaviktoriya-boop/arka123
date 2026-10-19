@@ -73,14 +73,22 @@
     // будим — запуск без звука и сразу пауза. Сразу после заставки и ещё раз при первом касании
     ["touchstart", "pointerdown", "keydown", "wheel"].forEach((t) => addEventListener(t, wakeVideo, { once: true, passive: true }));
   }
+  // waking — ролик запущен только ради загрузки: поверх лежит стоп-кадр, гость его не видит.
+  // travelPlay — видео играет переход: «будильник» его не останавливает
+  let waking = false, travelPlay = false;
   function wakeVideo() {
-    if (!video || videoReady) return;
+    if (!video || videoReady || waking) return;
+    waking = true;
+    showLayers(Math.max(cur, 0), 0);
+    const done = () => {
+      if (!travelPlay) { video.pause(); try { video.currentTime = timeOf(Math.max(cur, 0)); } catch (e) {} }
+      waking = false;
+    };
     try {
-      // play + сразу pause: браузер начинает грузить ролик, но он не играет (иначе Аркадий «оживал» под первым экраном)
+      // iPhone грузит ролик, только когда он по-настоящему играет: play без звука, пауза — когда пошёл
       const p = video.play();
-      if (p) p.catch(() => {});
-      video.pause();
-    } catch (e) { /* без видео остаются стоп-кадры */ }
+      if (p) p.then(done).catch(() => { waking = false; }); else done();
+    } catch (e) { waking = false; /* без видео остаются стоп-кадры */ }
   }
   const hasVideo = () => !!(video && videoReady);
   const timeOf = (i) => Math.min(+scenes[Math.max(0, i)].dataset.t || 0, video && video.duration ? video.duration - .05 : Infinity);
@@ -98,7 +106,7 @@
     const st = stillFor(i);
     // видео стоит на паузе ровно на кадре сцены (запуск сайта, прелоадер) — это тоже покой: стоп-кадр не снимаем,
     // иначе на миг видно лицо из видео без ретуши
-    const still = resting || (hasVideo() && video.paused && Math.abs(video.currentTime - timeOf(i)) < .04);
+    const still = resting || waking || (hasVideo() && video.paused && Math.abs(video.currentTime - timeOf(i)) < .04);
     layers.forEach((l) => {
       const on = l.kind === "bg" ? l.src === bgSrc : (!bg && l.i === st && (!hasVideo() || (still && l.i === i)));
       // стоп-кадр поверх видео уходит быстро — видео уже трогается
@@ -166,10 +174,11 @@
       // куски видео, которые заменены фото (data-play)
       if (t1 > t0 && toI === fromI + 1) {
         video.playbackRate = clamp((t1 - t0) / dur, .5, 4);
+        travelPlay = true;
         const p = video.play();
-        if (p) p.catch(() => { video.currentTime = t1; resolve(); });
+        if (p) p.catch(() => { travelPlay = false; video.currentTime = t1; resolve(); });
         (function watch() {
-          if (video.currentTime >= t1 - .02 || video.ended) { video.pause(); video.currentTime = t1; resolve(); }
+          if (video.currentTime >= t1 - .02 || video.ended) { travelPlay = false; video.pause(); video.currentTime = t1; resolve(); }
           else requestAnimationFrame(watch);
         })();
         return;
@@ -199,12 +208,14 @@
     showLayers(toI, fade);
     video.playbackRate = clamp((b - a) / dur, .5, 4);
     await new Promise((r) => {
+      travelPlay = true;
       const p = video.play();
       if (p) p.catch(r);
       (function watch() {
         if (video.currentTime >= b - .02 || video.ended) r(); else requestAnimationFrame(watch);
       })();
     });
+    travelPlay = false;
     video.pause();
     if (b < t1 - .04) {
       resting = true;
@@ -280,6 +291,12 @@
     if (busy || i === cur) return;
     busy = true;
     const from = cur;
+    // видео ещё грузится (телефон) — ждём его до 2,5 с, иначе вместо проезда будет резкая смена кадров
+    if (video && !videoReady && from >= 0 && !reduce && !opts.instant) {
+      wakeVideo();
+      await Promise.race([new Promise((r) => video.addEventListener("loadeddata", r, { once: true })), sleep(2500)]);
+      waking = false;   // дальше видео играет переход — стоп-кадр «будильника» его не закрывает
+    }
     const old = scenes[from];
     if (old) {
       old.classList.add("is-leaving");
