@@ -74,17 +74,19 @@ button:focus-visible{outline:2px solid var(--portal);outline-offset:2px}
   .views{flex-direction:row;flex-wrap:wrap;justify-content:flex-end;left:76px;max-width:none;top:calc(16px + env(safe-area-inset-top,0px))}
   .views button{padding:8px 10px;font-size:13px}
   .views .sep{display:none}
-  .card{bottom:calc(76px + env(safe-area-inset-bottom,0px));padding:14px 16px;gap:8px}
+  .card{bottom:calc(92px + env(safe-area-inset-bottom,0px));padding:14px 16px;gap:8px}
   .card h2{font-size:20px}
   .card p{font-size:13.5px}
   .card .note,.card .specs{display:none}
   .hint{display:none}
-  .modes{left:16px;right:16px;transform:none}
-  .modes button{padding:11px 12px;font-size:13.5px}
+  /* расстановки — сеткой без прокрутки вбок: длинная надпись переносится, ничего не обрезается */
+  .modes{left:16px;right:16px;transform:none;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));overflow:visible}
+  .modes button{padding:10px 6px;font-size:13.5px;line-height:1.2}
 }
 @media (max-width:520px){
   .card p{display:none}
-  .card{gap:6px}
+  .card{gap:6px;bottom:calc(128px + env(safe-area-inset-bottom,0px))}
+  .modes{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 @media (prefers-reduced-motion: reduce){.loading i{animation:none}}
 </style>
