@@ -419,7 +419,7 @@ h3 { font-size: 19px; font-weight: 600; letter-spacing: -.01em; }
 .scene-counter__bar i { position: absolute; left: 0; top: -1px; height: 3px; width: 0; background: var(--portal); transition: width 1s var(--ease-out); }
 .scenes-on .scene-next {
   display: grid; place-items: center; position: fixed; z-index: 40; right: var(--edge); bottom: 16px;
-  width: 40px; height: 40px; border-radius: var(--r-btn); cursor: pointer;
+  width: 40px; height: 40px; border-radius: var(--r-btn); cursor: pointer; padding: 0;
   background: transparent; color: var(--paper); border: 1px solid rgba(233, 236, 238, .35); font-size: 18px;
   transition: background .2s, opacity .3s;
 }
@@ -455,9 +455,8 @@ h3 { font-size: 19px; font-weight: 600; letter-spacing: -.01em; }
   .scene__panel { padding: 22px 18px; }
   .scene__panel--bare { padding: 0; }
   .scenes-on .scene-ui { left: var(--edge); bottom: 12px; }
-  .scene-counter__bar { width: 40px; }
-  #scene-name { display: none; }   /* на телефоне «↓» по центру — у счётчика остаются только номер и полоска */
-  .scenes-on .scene-next { bottom: 12px; right: auto; left: 50%; transform: translateX(-50%); }   /* на телефоне плашка во всю ширину — «↓» по её центру */
+  .scene-counter__bar { width: 64px; }
+  .scenes-on .scene-next { bottom: 12px; }
 }
 /* низкий телефон: «Контакты» плотнее, чтобы влезли без прокрутки */
 @media (max-width: 720px) and (max-height: 760px) {
