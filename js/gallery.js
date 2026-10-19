@@ -6,7 +6,7 @@
   const track = document.getElementById("gallery-track");
   if (!track) return;
   const items = [...track.querySelectorAll("img")];
-  const SRC = items.map((i) => i.getAttribute("src"));
+  const SRC = items.map((i) => i.dataset.src || i.getAttribute("src"));   // data-src: фото не грузятся, пока не открыта галерея
   const CAPS = items.map((i) => i.getAttribute("alt"));
   const N = SRC.length;
   // <img> внутри — запасной вариант без JS; при работающем скрипте рисуем на canvas.

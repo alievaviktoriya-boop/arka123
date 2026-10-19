@@ -455,8 +455,9 @@ h3 { font-size: 19px; font-weight: 600; letter-spacing: -.01em; }
   .scene__panel { padding: 22px 18px; }
   .scene__panel--bare { padding: 0; }
   .scenes-on .scene-ui { left: var(--edge); bottom: 12px; }
-  .scene-counter__bar { width: 64px; }
-  .scenes-on .scene-next { bottom: 12px; }
+  .scene-counter__bar { width: 40px; }
+  #scene-name { display: none; }   /* на телефоне «↓» по центру — у счётчика остаются только номер и полоска */
+  .scenes-on .scene-next { bottom: 12px; right: auto; left: 50%; transform: translateX(-50%); }   /* на телефоне плашка во всю ширину — «↓» по её центру */
 }
 /* низкий телефон: «Контакты» плотнее, чтобы влезли без прокрутки */
 @media (max-width: 720px) and (max-height: 760px) {

@@ -38,16 +38,22 @@
       if (!src) continue;
       const el = document.createElement("div");
       el.className = "stage__layer stage__layer--" + kind;
-      el.style.backgroundImage = `url(${src})`;
       stage.insertBefore(el, stage.firstChild);
       layers.push({ i, kind, el, src });
     }
   });
   // стоп-кадр сцены — её собственный или ближайший предыдущий
   const stillFor = (i) => { for (let j = i; j >= 0; j--) if (scenes[j].dataset.still) return j; return -1; };
+  // картинки слоёв грузятся по мере надобности: текущая сцена, соседние и стоп-кадр, в который растворяемся
+  const loadLayer = (l) => { if (!l.on) { l.on = true; l.el.style.backgroundImage = `url(${l.src})`; } };
+  function want(i) {
+    const bg = scenes[i] && scenes[i].dataset.bg, st = stillFor(i);
+    layers.forEach((l) => { if (Math.abs(l.i - i) <= 1 || l.i === st || (bg && l.src === bg)) loadLayer(l); });
+  }
 
   let video = null, videoReady = false;
-  const src = stage.dataset.video;
+  // на телефоне — лёгкая версия ролика (960px, вдвое меньше по весу): кадр всё равно обрезан по ширине
+  const src = (innerWidth <= 720 && stage.dataset.videoMobile) || stage.dataset.video;
   if (src) {
     video = document.createElement("video");
     video.className = "stage__video";
@@ -63,6 +69,16 @@
     }, { once: true });
     video.addEventListener("error", () => { video.remove(); video = null; }, { once: true });
     stage.insertBefore(video, stage.firstChild);
+    // iPhone (и Android с экономией трафика) не грузят видео заранее, пока его не запустили:
+    // будим — запуск без звука и сразу пауза. Сразу после заставки и ещё раз при первом касании
+    ["touchstart", "pointerdown", "keydown", "wheel"].forEach((t) => addEventListener(t, wakeVideo, { once: true, passive: true }));
+  }
+  function wakeVideo() {
+    if (!video || videoReady) return;
+    try {
+      const p = video.play();
+      if (p) p.then(() => { if (!busy) { video.pause(); if (cur >= 0) video.currentTime = timeOf(cur); } }).catch(() => {});
+    } catch (e) { /* без видео остаются стоп-кадры */ }
   }
   const hasVideo = () => !!(video && videoReady);
   const timeOf = (i) => Math.min(+scenes[Math.max(0, i)].dataset.t || 0, video && video.duration ? video.duration - .05 : Infinity);
@@ -73,6 +89,7 @@
 
   // какие слои видны в сцене i; dur — длительность смены
   function showLayers(i, dur) {
+    want(i);
     // фото сцены; у соседних сцен с одним фото (Контакты → Футер) слой не гаснет — иначе сквозь него мелькает видео
     const bgSrc = scenes[i].dataset.bg;
     const bg = !!bgSrc;
@@ -249,6 +266,7 @@
 
   async function goTo(i, opts = {}) {
     i = clamp(i, 0, scenes.length - 1);
+    want(i);
     if (busy || i === cur) return;
     busy = true;
     const from = cur;
@@ -362,6 +380,9 @@
   showLayers(Math.max(0, startAt), 0);
   function start() {
     stage.classList.add("is-on");
+    wakeVideo();
+    // остальные фоны и стоп-кадры — фоном, когда первый экран уже показан (переходы через меню без ожидания)
+    setTimeout(() => layers.forEach(loadLayer), 5000);
     if (startAt > 0) goTo(startAt, { instant: true });
     else goTo(0, { dur: .6 });
   }
