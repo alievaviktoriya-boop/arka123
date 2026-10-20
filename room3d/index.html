@@ -4,7 +4,7 @@
 <link rel="icon" href="../assets/img/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600&family=Geist:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600&family=Geist:wght@400;500&display=swap">
 <style>
 /* Layout: полноэкранная 3D-сцена; поверх — карточка режима слева внизу, переключатель видов справа, режимы зала по центру снизу */
 :root{
@@ -16,7 +16,7 @@
   --ink-soft:#AAB9C7;
   --line:rgba(233,236,238,.12);
   --accent:#C99A5B;          /* тон дубового паркета */
-  --f-display:"Inter Tight","Segoe UI",system-ui,sans-serif;
+  --f-display:"Manrope","Segoe UI",system-ui,sans-serif;
   --f-body:"Geist","Segoe UI",system-ui,sans-serif;
   color-scheme:dark;
 }
@@ -28,7 +28,7 @@ body{margin:0;background:var(--night);color:var(--ink);font:400 15px/1.5 var(--f
 .ui>*{pointer-events:auto}
 .brand{position:absolute;top:calc(16px + env(safe-area-inset-top,0px));left:16px;display:flex;align-items:center;gap:10px;background:var(--glass);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);padding:9px 14px 9px 11px;border-radius:6px;box-shadow:0 1px 0 var(--line) inset,0 6px 24px rgba(0,0,0,.28)}
 .brand svg{width:22px;height:25px;flex:none}
-.brand b{font:500 15px/1 var(--f-display);letter-spacing:.01em}
+.brand b{font:600 15px/1 var(--f-display);letter-spacing:.01em}
 .brand span{font-size:13px;color:var(--ink-soft)}
 
 .views{position:absolute;top:calc(16px + env(safe-area-inset-top,0px));right:16px;display:flex;flex-direction:column;gap:6px;background:var(--glass);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);padding:6px;border-radius:10px;box-shadow:0 6px 24px rgba(0,0,0,.28)}
@@ -42,7 +42,7 @@ button:focus-visible{outline:2px solid var(--portal);outline-offset:2px}
 
 .card{position:absolute;left:16px;bottom:calc(84px + env(safe-area-inset-bottom,0px));width:min(360px,calc(100vw - 32px));background:var(--glass);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-radius:10px;padding:18px 20px;border:1px solid var(--line);box-shadow:0 10px 36px rgba(0,0,0,.32);display:grid;gap:10px}
 .card .eyebrow{font:600 11px/1 var(--f-display);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft)}
-.card h2{margin:0;font:300 26px/1.15 var(--f-display);letter-spacing:-.01em;text-wrap:balance}
+.card h2{margin:0;font:400 26px/1.15 var(--f-display);letter-spacing:-.01em;text-wrap:balance}
 .card p{margin:0;color:var(--ink-soft);font-size:14.5px}
 .fold{position:absolute;top:10px;right:10px;width:30px;height:30px;border-radius:6px;border:0;background:rgba(233,236,238,.08);color:var(--ink);font:500 18px/1 var(--f-body);cursor:pointer}
 .fold:hover{background:rgba(233,236,238,.16)}
@@ -50,7 +50,7 @@ button:focus-visible{outline:2px solid var(--portal);outline-offset:2px}
 .card.folded>*:not(h2):not(.fold){display:none}
 .card.folded h2{font-size:17px}
 .cap{display:flex;align-items:baseline;gap:8px}
-.cap strong{font:300 32px/1 var(--f-display);font-variant-numeric:tabular-nums}
+.cap strong{font:400 32px/1 var(--f-display);font-variant-numeric:tabular-nums}
 .cap span{color:var(--ink-soft);font-size:14px}
 .specs{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 0;padding:0;list-style:none}
 .specs li{font-size:12.5px;padding:5px 8px;border-radius:4px;background:rgba(233,236,238,.07)}
@@ -97,7 +97,7 @@ button:focus-visible{outline:2px solid var(--portal);outline-offset:2px}
 
 <div class="ui">
   <div class="brand">
-    <svg viewBox="0 0 22 25" aria-hidden="true"><path d="M1.5 23.5V11A9.5 9.5 0 0 1 20.5 11V23.5Z" fill="none" stroke="#F1ECE3" stroke-width="2.4"/><text x="11" y="19.5" text-anchor="middle" font-family="Inter Tight,sans-serif" font-weight="600" font-size="8" fill="#F1ECE3">123</text></svg>
+    <svg viewBox="0 0 22 25" aria-hidden="true"><path d="M1.5 23.5V11A9.5 9.5 0 0 1 20.5 11V23.5Z" fill="none" stroke="#F1ECE3" stroke-width="2.4"/><text x="11" y="19.5" text-anchor="middle" font-family="Manrope,sans-serif" font-weight="600" font-size="8" fill="#F1ECE3">123</text></svg>
     <b>АРКА 123</b><span>Наше помещение</span>
   </div>
 
@@ -287,8 +287,8 @@ function slideTexture() {
     g.fillStyle = '#F1ECE3'; g.fillRect(0, 0, 1280, 720);
     g.strokeStyle = '#203641'; g.lineWidth = 16;
     g.beginPath(); g.moveTo(110, 560); g.lineTo(110, 300); g.arc(230, 300, 120, Math.PI, 0); g.lineTo(350, 560); g.closePath(); g.stroke();
-    g.fillStyle = '#203641'; g.font = '300 92px "Inter Tight", sans-serif'; g.textAlign = 'center'; g.fillText('123', 230, 520);
-    g.textAlign = 'left'; g.font = '300 76px "Inter Tight", sans-serif'; g.fillText('Мастер-класс', 430, 300);
+    g.fillStyle = '#203641'; g.font = '400 92px "Manrope", sans-serif'; g.textAlign = 'center'; g.fillText('123', 230, 520);
+    g.textAlign = 'left'; g.font = '400 76px "Manrope", sans-serif'; g.fillText('Мастер-класс', 430, 300);
     g.font = '500 40px Geist, sans-serif'; g.fillStyle = '#56666E';
     g.fillText('Встречаемся напротив библиотеки', 432, 370);
     g.fillStyle = '#C99A5B'; g.fillRect(432, 430, 120, 8);
@@ -603,7 +603,7 @@ plainWall.add(box(L + 2 * T, H, T, M.plaster, 0, H / 2, Z0 - T / 2)); setBoxUV(p
   const digit = t => {   // чёрная цифра на прозрачном фоне, жирный гротеск
     const c = document.createElement('canvas'); c.width = 256; c.height = 128;
     const g = c.getContext('2d'); g.fillStyle = '#1b1e21'; g.textAlign = 'center'; g.textBaseline = 'middle';
-    g.font = '700 112px "Inter Tight", "Segoe UI", Arial, sans-serif'; g.fillText(t, 128, 68);
+    g.font = '600 112px "Manrope", "Segoe UI", Arial, sans-serif'; g.fillText(t, 128, 68);
     const tex = new THREE.CanvasTexture(c); tex.encoding = THREE.sRGBEncoding;
     const m = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 0.2), new THREE.MeshStandardMaterial({ map: tex, transparent: true, alphaTest: 0.3, roughness: 0.75, envMapIntensity: 0.2 }));
     if (document.fonts) document.fonts.ready.then(() => { g.clearRect(0, 0, 256, 128); g.fillText(t, 128, 68); tex.needsUpdate = true; });
