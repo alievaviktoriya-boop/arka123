@@ -367,7 +367,7 @@ h3 { font-size: 19px; font-weight: 600; letter-spacing: -.01em; }
 .book-form input:focus { outline: none; border-color: var(--portal); box-shadow: 0 0 0 3px rgba(127, 211, 255, .2); }
 .book-form__row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
 .book-form__row--submit { align-items: end; }
-.book-form__row--submit .btn { padding-block: 13px; padding-inline: 16px; }
+.book-form__row--submit .btn { padding-block: 13px; padding-inline: 18px; font-size: 11px; letter-spacing: .1em; }   /* как кнопка в шапке: надпись не упирается в края */
 .form-done { color: var(--portal); outline: none; }
 .book-form.is-sent label, .book-form.is-sent .btn, .book-form.is-sent .book-form__row { display: none; }
 /* Футер — последний шаг: визитка с колонками (знак и описание, «Зал», «Аренда», «Контакты»), внизу © и часы */
