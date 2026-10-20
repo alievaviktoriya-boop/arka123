@@ -86,12 +86,23 @@
   if (form) {
     // телефон: форма раскрывается по кнопке «Оставить заявку»
     const bookToggle = document.querySelector(".book-toggle");
+    // на телефоне форма открывается вместо контактов (плашка не длиннее экрана), «← Контакты» возвращает их
+    const panel = form.closest(".scene__panel");
     if (bookToggle) bookToggle.addEventListener("click", () => {
       form.classList.add("is-open");
+      panel.classList.add("is-form");
+      panel.scrollTop = 0;
       bookToggle.setAttribute("aria-expanded", "true");
       bookToggle.parentElement.hidden = true;
       form.querySelector("input").focus({ preventScroll: true });
-      form.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    });
+    const back = form.querySelector(".book-back");
+    if (back && bookToggle) back.addEventListener("click", () => {
+      form.classList.remove("is-open");
+      panel.classList.remove("is-form");
+      bookToggle.setAttribute("aria-expanded", "false");
+      bookToggle.parentElement.hidden = false;
+      bookToggle.focus();
     });
     form.addEventListener("submit", (e) => {
       e.preventDefault();

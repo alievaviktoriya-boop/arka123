@@ -92,7 +92,7 @@ h3 { font-size: 19px; font-weight: 600; letter-spacing: -.01em; }
   transition: background-color .3s ease, border-color .3s ease, color .3s ease;
 }
 .btn:hover { background-color: var(--portal); border-color: var(--portal); }
-.btn--small { padding: 12px 18px; font-size: 12px; }
+.btn--small { padding: 12px 22px; font-size: 11px; letter-spacing: .1em; }   /* в шапке: меньше шрифт и разрядка, шире поля — надпись не упирается в края */
 .btn--ghost { background-color: transparent; color: var(--text); border-color: rgba(233, 236, 238, .5); }
 .btn--ghost:hover { background-color: rgba(233, 236, 238, .1); border-color: var(--text); }
 @media (prefers-reduced-motion: reduce) { .btn { transition: none; } }
@@ -192,7 +192,7 @@ h3 { font-size: 19px; font-weight: 600; letter-spacing: -.01em; }
 @media (max-width: 480px) {
   .brand .lockup { --h: 32px; }
   .brand .lockup .sl { display: none; }
-  .site-header .btn { padding: 11px 12px; font-size: 11px; letter-spacing: .1em; }
+  .site-header .btn { padding: 11px 14px; font-size: 10.5px; letter-spacing: .07em; }
 }
 
 /* ==========================================================================
@@ -359,6 +359,9 @@ h3 { font-size: 19px; font-weight: 600; letter-spacing: -.01em; }
 .contact-actions { display: none; }
 .book-form { display: grid; gap: 14px; background: var(--glass-card); border: 1px solid rgba(127, 211, 255, .2); border-radius: var(--radius); padding: 18px; margin-top: 18px; gap: 12px; }
 .book-form h3 { font-size: 18px; }
+/* заголовок формы и «назад» видны только на телефоне, когда форма открыта вместо контактов */
+.book-form__head { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.book-back { display: none; }
 .book-form label { display: grid; gap: 6px; font-size: 14px; color: var(--text-soft); }
 .book-form input { width: 100%; min-width: 0; background: rgba(19, 21, 31, .7); border: 1px solid var(--line); border-radius: var(--r-btn); padding: 10px 12px; color: var(--text); color-scheme: dark; }
 .book-form input:focus { outline: none; border-color: var(--portal); box-shadow: 0 0 0 3px rgba(127, 211, 255, .2); }
@@ -444,6 +447,13 @@ h3 { font-size: 19px; font-weight: 600; letter-spacing: -.01em; }
   .contact-actions[hidden] { display: none; }
   .contact-actions .btn { flex: 1 1 auto; padding: 15px 10px; font-size: 12px; letter-spacing: .08em; }   /* обе кнопки в одну строку — плашка ниже, рамка «Позвонить» не уходит под край */
   .book-form:not(.is-open) { display: none; }
+  /* форма открыта — вместо контактов: плашка не длиннее экрана, верх не обрезается */
+  .scene__panel--contacts.is-form > .eyebrow, .scene__panel--contacts.is-form > h2, .scene__panel--contacts.is-form .contact-list { display: none; }
+  .scene__panel--contacts.is-form .book-form { margin-top: 0; }
+  .scene__panel--contacts.is-form { max-height: calc(100svh - var(--header-h) - 96px); }   /* пока заполняют форму, лицо можно прикрыть — форма целиком */
+  .book-form.is-open .book-form__head { position: static; width: auto; height: auto; overflow: visible; clip: auto; white-space: normal; display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+  .book-back { display: inline-block; background: none; border: 0; padding: 6px 0; color: var(--portal); font: 500 12px/1 var(--f-mono); letter-spacing: .08em; text-transform: uppercase; cursor: pointer; white-space: nowrap; }
+  .book-form input { font-size: 16px; }   /* меньше 16px — iPhone сам увеличивает страницу при вводе */
   .scene__panel--contacts { max-height: calc(100svh - 330px); }
   .contact-list { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0 20px; }   /* на телефоне лист на всю ширину — контакты в две колонки, короче */
   :root { --ui-h: 56px; --radius: 8px; }
