@@ -95,6 +95,18 @@ ${portal}
       mk.style.transformOrigin = (cx - r.left) + "px " + (cy - r.top) + "px";
       loader.style.webkitMaskComposite = "xor"; loader.style.maskComposite = "exclude";
       const t0 = performance.now(), D = 1400;
+      // Маска-проём ставится один раз, «надвигается» весь слой масштабом от центра окна —
+      // это анимация видеочипа, на телефоне без рывков (раньше маска пересчитывалась каждый кадр)
+      if (loader.animate) {
+        setMask(hole + ", linear-gradient(#000,#000)", w + "px " + h + "px, 100% 100%", (cx - w / 2) + "px " + (cy - h / 2) + "px, 0 0");
+        loader.style.transformOrigin = cx + "px " + cy + "px";
+        loader.style.willChange = "transform, opacity";
+        const grow = loader.animate([{ transform: "scale(1)" }, { transform: "scale(" + K + ")" }],
+          { duration: D, easing: "cubic-bezier(.65, 0, .35, 1)", fill: "forwards" });
+        loader.animate([{ opacity: 1 }, { opacity: 1, offset: .55 }, { opacity: 0 }], { duration: D, fill: "forwards" });
+        grow.onfinish = done;
+        return;
+      }
       (function f(now) {
         const t = Math.min(1, (now - t0) / D);
         const e = t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
